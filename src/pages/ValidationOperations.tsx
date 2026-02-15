@@ -12,7 +12,7 @@ import { otherOperationService } from "../services/OtherOperationService";
 import { operationWorkflowService } from "../services/OperationWorkflowService";
 
 import "../styles/pages.css";
-import "../styles/card.css";
+import "../styles/Card.css";
 import Alert from "../components/Alert";
 
 interface ValidationCardProps {
