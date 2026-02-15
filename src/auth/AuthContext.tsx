@@ -1,4 +1,4 @@
-// src/auth/AuthContext.tsx
+// src/contexts/AuthContext.tsx
 import { createContext, useContext, useEffect, useState } from 'react';
 import { userService } from '../services/UserService';
 import bcrypt from 'bcryptjs';
@@ -34,16 +34,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     const login = async (username: string, password: string) => {
-        // Récupérer l'utilisateur par username
+        // ✅ Cas admin hors DB
+        if (username === 'admin') {
+            const adminPassword = 'motdepasse123'; // <- ton mot de passe admin fixe
+            if (password !== adminPassword) {
+                throw new Error('Mot de passe admin incorrect');
+            }
+            const authUser: User = { username: 'admin', role: 'admin' };
+            setUser(authUser);
+            setIsAuthenticated(true);
+            localStorage.setItem('auth_user', JSON.stringify(authUser));
+            return;
+        }
+
+        // 🔹 Cas utilisateur normal via DB
         const users = await userService.findByUsername(username);
         if (!users.length) throw new Error('Utilisateur non trouvé');
+
         const u = users[0];
 
         // Vérifier le mot de passe hashé
         const valid = bcrypt.compareSync(password, u.password!);
         if (!valid) throw new Error('Mot de passe incorrect');
 
-        const authUser = { username: u.username, role: u.role };
+        const authUser: User = { username: u.username, role: u.role };
         setUser(authUser);
         setIsAuthenticated(true);
         localStorage.setItem('auth_user', JSON.stringify(authUser));
