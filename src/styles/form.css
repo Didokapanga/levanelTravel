@@ -1,0 +1,94 @@
+.app-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Ligne responsive */
+.form-row {
+    display: flex;
+    gap: 20px;
+}
+
+/* Champ */
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.form-field label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.form-field input,
+.form-field select,
+.form-group select,
+.form-field textarea {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background-color: #fff;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+    outline: none;
+    border-color: #0f2a44;
+    box-shadow: 0 0 0 2px rgba(15, 42, 68, 0.1);
+}
+
+/* Actions */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.password-field {
+    display: flex;
+    gap: 8px;
+}
+
+.toggle-password {
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background: #f3f4f6;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.checkbox-field {
+    display: flex;
+    align-items: center;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 820px) {
+    .form-row {
+        flex-direction: column;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions button {
+        width: 100%;
+    }
+}

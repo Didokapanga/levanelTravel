@@ -1,0 +1,106 @@
+/* src/styles/pages.css */
+
+/* ============================= */
+/* Container général de la page  */
+/* ============================= */
+.page-container {
+    padding: 20px;
+    background-color: #f7f7f7;
+    min-height: 100vh;
+}
+
+/* Titre de la page */
+.page-container h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* ============================= */
+/* Grille des cartes             */
+/* ============================= */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+/* ============================= */
+/* Carte individuelle            */
+/* ============================= */
+.validation-card {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 360px;
+    max-height: 380px;
+    overflow-y: auto;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.validation-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Titre de la carte */
+.validation-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 10px;
+    color: #1a73e8;
+}
+
+/* Texte des détails */
+.validation-card p {
+    margin: 5px 0;
+    font-size: 0.95rem;
+    color: #555;
+}
+
+/* Liste segments */
+.validation-card ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 5px 0 10px 0;
+}
+
+.validation-card ul li {
+    font-size: 0.9rem;
+    padding: 3px 0;
+    border-bottom: 1px dotted #ddd;
+}
+
+/* ============================= */
+/* Boutons de la carte            */
+/* ============================= */
+.card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.card-actions button {
+    min-width: 80px;
+    font-size: 0.9rem;
+}
+
+/* ============================= */
+/* Scroll interne si nécessaire  */
+/* ============================= */
+.validation-card::-webkit-scrollbar {
+    width: 6px;
+}
+
+.validation-card::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+.validation-card::-webkit-scrollbar-track {
+    background-color: transparent;
+}

@@ -1,0 +1,204 @@
+/* CONTENEUR GLOBAL DE PAGE */
+.page-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ========================= */
+/* HEADER SECTION */
+/* ========================= */
+
+.page-header {
+    background-color: #ffffff;
+    padding: 20px 24px;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Texte gauche */
+.page-header-left h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+    color: #0f2a44;
+}
+
+.page-header-left p {
+    margin: 4px 0 0 0;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* ========================= */
+/* BODY SECTION avec scroll horizontal pour table large */
+/* ========================= */
+.page-body {
+    background-color: #ffffff;
+    padding: 20px 24px;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    /* permet le scroll horizontal si le contenu dépasse */
+    overflow-x: hidden;
+}
+
+/* s'assure que le tableau prend tout l'espace possible */
+.page-body .table-container {
+    width: 100%;
+    min-width: 600px;
+    /* ou plus selon tes colonnes */
+}
+
+/* tableau responsive */
+.page-body table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+    /* laisse le navigateur ajuster les colonnes */
+}
+
+/* scroll sur mobile pour le tableau si trop large */
+@media (max-width: 820px) {
+    .page-body {
+        padding: 16px;
+    }
+
+    .page-body .table-container {
+        min-width: 500px;
+        /* tableau scrollable */
+    }
+}
+
+/* ========================= */
+/* RESPONSIVE */
+/* ========================= */
+
+@media (max-width: 820px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .page-header-right {
+        width: 100%;
+    }
+
+    .page-header-right button {
+        width: 100%;
+    }
+}
+
+
+.user-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.form-group input {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    transition: border 0.2s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #0f2a44;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: white;
+    font-weight: 500;
+}
+
+.badge-clean {
+    background-color: #4caf50;
+    /* vert */
+}
+
+.badge-dirty {
+    background-color: #ff9800;
+    /* orange */
+}
+
+.badge-conflict {
+    background-color: #f44336;
+    /* rouge */
+}
+
+
+/* ========================= */
+/* OPERATIONS TABS */
+/* ========================= */
+
+.operations-tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: -10px;
+}
+
+.operations-tab {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.operations-tab:hover {
+    background-color: #f3f4f6;
+}
+
+.operations-tab.active {
+    background-color: #0f2a44;
+    color: white;
+    border-color: #0f2a44;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+    .operations-tabs {
+        flex-direction: column;
+    }
+
+    .operations-tab {
+        width: 100%;
+        text-align: center;
+    }
+}

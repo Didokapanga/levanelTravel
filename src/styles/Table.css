@@ -1,0 +1,118 @@
+/* ========================= */
+/* CONTENEUR TABLEAU */
+/* ========================= */
+.table-container {
+    width: 100%;
+    overflow-y: auto;
+    /* scroll horizontal si table trop large */
+    border-radius: 8px;
+}
+
+/* ========================= */
+/* TABLE PRINCIPALE */
+/* ========================= */
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    min-width: 600px;
+    /* éviter que le tableau soit trop petit */
+}
+
+/* ========================= */
+/* HEADER */
+/* ========================= */
+.custom-table thead {
+    background-color: #0f2a44;
+    color: #fff;
+}
+
+.custom-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #173a5e;
+    white-space: nowrap;
+    /* texte header sur une ligne */
+}
+
+/* ========================= */
+/* BODY */
+/* ========================= */
+
+/* Lignes alternées */
+.custom-table tbody tr.even {
+    background-color: #f9f9f9;
+}
+
+.custom-table tbody tr.odd {
+    background-color: #ffffff;
+}
+
+/* Hover */
+.custom-table tbody tr:hover {
+    background-color: #e6f0ff;
+}
+
+/* Cellules */
+.custom-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e0e0e0;
+    white-space: nowrap;
+    /* éviter que le contenu casse la ligne */
+}
+
+/* Aucun résultat */
+.custom-table .no-data {
+    text-align: center;
+    color: #888;
+    padding: 20px;
+}
+
+/* ========================= */
+/* BADGES */
+/* ========================= */
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.badge.synced {
+    background-color: #22c55e;
+    /* vert */
+}
+
+.badge.pending {
+    background-color: #facc15;
+    /* jaune */
+}
+
+.badge.failed {
+    background-color: #ef4444;
+    /* rouge */
+}
+
+/* ========================= */
+/* RESPONSIVE */
+/* ========================= */
+@media (max-width: 820px) {
+
+    .custom-table th,
+    .custom-table td {
+        padding: 10px 12px;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+}

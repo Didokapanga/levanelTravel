@@ -1,0 +1,61 @@
+.dashboard-page {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.left-section {
+    width: 75%;
+    gap: 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.right-section {
+    flex: 0 0 25%;
+    /* largeur fixe dans le flex parent */
+    max-width: 360px;
+    /* limite pour grands écrans */
+    min-width: 260px;
+    /* évite écrasement */
+
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+
+    height: 100%;
+    overflow: hidden;
+    /* empêche débordement global */
+}
+
+/* chaque bloc interne prend sa place */
+.right-section>div {
+    flex: 1;
+    min-height: 0;
+    /* IMPORTANT pour scroll interne */
+}
+
+.card-section {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+}
+
+
+.list-section {
+    width: 100%;
+    height: 65%;
+}
+
+.list-up {
+    width: 100%;
+    height: 100%;
+}
+
+.list-down {
+    width: 100%;
+    height: 100%;
+}

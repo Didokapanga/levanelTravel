@@ -1,0 +1,237 @@
+/* Layout global */
+.layout {
+    display: flex;
+    height: 100vh;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 250px;
+    background-color: #1f2937;
+    color: #fff;
+    transition: width 0.3s;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar.closed {
+    width: 60px;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    font-weight: 600;
+    font-size: 18px;
+    border-bottom: 1px solid #374151;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    margin-top: 16px;
+}
+
+.nav-item {
+    padding: 12px 16px;
+    color: #cbd5e1;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.nav-item:hover {
+    background-color: #374151;
+}
+
+.nav-item.active {
+    background-color: #2563eb;
+    color: #fff;
+}
+
+/* Main content */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #f4f6f9;
+    overflow-x: auto;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 8px;
+    /* avant : 16px 24px -> réduit de moitié */
+    background-color: transparent;
+    border-bottom: 1px solid #d1d5db;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    font-size: 10px;
+    /* optionnel : réduit légèrement le texte */
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    /* espace entre le profil et le bouton */
+}
+
+.users_info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    /* texte aligné à droite */
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+.users_info h2 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    /* texte foncé */
+}
+
+.users_info p {
+    margin: 0;
+    font-size: 12px;
+    color: #6b7280;
+    /* gris clair pour le rôle */
+}
+
+.logout-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background-color: #2563eb;
+    /* bleu ERP */
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.logout-button:hover {
+    background-color: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.logout-button:active {
+    background-color: #1e40af;
+    transform: translateY(0);
+}
+
+.logout-icon {
+    font-size: 16px;
+}
+
+.users_icon {
+    width: 40px;
+    /* largeur et hauteur identiques pour un cercle */
+    height: 40px;
+    background-color: #ffffff;
+    /* fond blanc */
+    border-radius: 50%;
+    /* pour avoir un cercle parfait */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    /* léger relief */
+}
+
+.users_icon .logout-icon {
+    font-size: 20px;
+    /* taille de l'icône */
+    color: #2563eb;
+    /* couleur ERP */
+}
+
+.burger-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 18px;
+    color: #2563eb;
+    /* couleur ERP */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.burger-button:hover {
+    background-color: #f0f4ff;
+    transform: translateY(-1px);
+}
+
+.burger-button:active {
+    background-color: #e5ecff;
+    transform: translateY(0);
+}
+
+
+/* Content */
+.content {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    background-color: transparent;
+    border-bottom: 1px solid #d1d5db;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* header-actions toujours à droite */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-left: auto;
+    /* pousse le bloc complètement à droite */
+}
+
+/* Burger bouton : visible uniquement sur petits écrans */
+.burger-button {
+    display: none;
+    /* caché par défaut */
+}
+
+@media (max-width: 820px) {
+    .burger-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        background-color: #ffffff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 18px;
+        color: #2563eb;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        transition: background-color 0.2s, transform 0.1s;
+        margin-right: 8px;
+        /* espace entre burger et header-actions */
+    }
+}

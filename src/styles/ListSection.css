@@ -1,0 +1,85 @@
+.list-section-container {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    overflow: auto;
+}
+
+/* colonne */
+.list-column {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+}
+
+/* header */
+.list-header {
+    font-size: 15px;
+    font-weight: 600;
+    color: #0f2a44;
+    margin-bottom: 10px;
+}
+
+/* body scroll */
+.list-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* item */
+.list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f7f9fc;
+    transition: 0.2s;
+}
+
+.list-item:hover {
+    background: #eef2f7;
+}
+
+/* texte */
+.list-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.list-subtitle {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.list-right {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f2a44;
+}
+
+.list-empty {
+    text-align: center;
+    font-size: 13px;
+    color: #9ca3af;
+    padding: 20px;
+}
+
+/* ========================= */
+/* RESPONSIVE */
+/* ========================= */
+
+@media (max-width: 820px) {
+    .list-section-container {
+        grid-template-columns: 1fr;
+    }
+}
