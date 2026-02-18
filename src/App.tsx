@@ -31,7 +31,7 @@ function App() {
   useEffect(() => {
     const interval = setInterval(() => {
       supabaseSyncService.fullSync();
-    }, 1000 * 60 * 1); // toutes les 2 min
+    }, 1000 * 60 * 1); // toutes les 1 min
 
     return () => clearInterval(interval);
   }, []);

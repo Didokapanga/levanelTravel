@@ -10,7 +10,7 @@ export default function FinancialOperationsPage() {
 
     // Colonnes du tableau
     const columns: Column<FinancialOperationWithDetails>[] = [
-        { key: "reservation_id", label: "Réservation" },
+        { key: "operation_id", label: "Opération" },
         { key: "contract_type", label: "Type contrat" },
         { key: "partner_name", label: "Partenaire" },
         { key: "source", label: "Source" },
@@ -60,10 +60,10 @@ export default function FinancialOperationsPage() {
                 </div>
             </div>
 
-                <Table
-                    columns={columns}
-                    data={operations}
-                />
+            <Table
+                columns={columns}
+                data={operations}
+            />
         </div>
     );
 }

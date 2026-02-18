@@ -15,41 +15,91 @@ export class OperationWorkflowService {
     /**
      * Valide une opération billetterie et applique les déductions
      * @param operation Opération à valider
+     * @param segments Segments optionnels fournis depuis le front
      * @returns L'opération et ses segments mis à jour
-     * @throws Erreur si le stock ou la caution est insuffisant
+     * @throws Erreur si le stock ou la caution est insuffisant ou utilisateur non manager
      */
-    async validateOperation(operation: OperationWithDetails) {
+    async validateOperation(
+        operation: OperationWithDetails,
+        segments?: OperationSegmentWithDetails[]
+    ) {
+
+        // --------------------------------------------------
+        // 0️⃣ Vérification authentification + rôle manager
+        // --------------------------------------------------
+        const stored = localStorage.getItem("auth_user");
+
+        if (!stored) {
+            throw new Error("Utilisateur non connecté");
+        }
+
+        const currentUser = JSON.parse(stored);
+
+        if (currentUser.role !== "manager") {
+            throw new Error("Seul un manager peut valider une opération");
+        }
+
         if (!operation.partner_id || !operation.contract_id) {
             throw new Error("Opération sans partenaire ou contrat");
+        }
+
+        if (operation.status === "validated") {
+            throw new Error("Opération déjà validée");
         }
 
         const now = new Date().toISOString();
 
         // 1️⃣ Récupérer le contrat actif du partenaire
-        const contracts: Contract[] = await contractService.getByPartner(operation.partner_id);
-        const activeContract = contracts.find(c => c.status === "active");
-        const contractType = activeContract?.contract_type ?? "agency_service";
+        const contracts: Contract[] =
+            await contractService.getByPartner(operation.partner_id);
 
-        // 2️⃣ Récupérer tous les segments liés à cette opération
-        const segments: OperationSegmentWithDetails[] =
-            await operationSegmentsService.findByOperation(operation.id);
+        const activeContract = contracts.find(c => c.status === "active");
+
+        if (!activeContract) {
+            throw new Error("Aucun contrat actif pour ce partenaire");
+        }
+
+        const contractType = activeContract.contract_type ?? "agency_service";
+
+        // 2️⃣ Récupérer tous les segments liés à cette opération si non fournis
+        const segmentsToUse: OperationSegmentWithDetails[] =
+            segments && segments.length
+                ? segments
+                : await operationSegmentsService.findByOperation(operation.id);
+
+        if (!segmentsToUse.length) {
+            throw new Error("Aucun segment trouvé pour cette opération");
+        }
 
         // 3️⃣ Déductions selon le type de contrat
-        for (const seg of segments) {
+        for (const seg of segmentsToUse) {
+
             const valueToDeduct = seg.sold_debit ?? 0;
 
+            if (valueToDeduct <= 0) continue;
+
             try {
+
                 if (contractType === "caution_and_stock") {
-                    // Déduction progressive sur toutes les lignes de stock du contrat
-                    await stockService.deductStock(operation.contract_id, valueToDeduct);
-                } else if (contractType === "caution_only") {
-                    // Déduction progressive sur toutes les lignes de caution du contrat
-                    await cautionService.deductCaution(operation.contract_id, valueToDeduct);
+                    await stockService.deductStock(
+                        operation.contract_id,
+                        valueToDeduct
+                    );
                 }
-                // agency_service → rien
+
+                else if (contractType === "caution_only") {
+                    await cautionService.deductCaution(
+                        operation.contract_id,
+                        valueToDeduct
+                    );
+                }
+
+                // agency_service → aucune déduction
+
             } catch (err: any) {
-                // On stoppe le workflow et on renvoie l'erreur pour afficher l'alerte
-                throw new Error(`Impossible de valider l'opération : ${err.message}`);
+                throw new Error(
+                    `Impossible de valider l'opération : ${err.message}`
+                );
             }
 
             // 4️⃣ Marquer le segment pour synchronisation
@@ -71,17 +121,22 @@ export class OperationWorkflowService {
 
         // 7️⃣ Créer l'opération financière pour la Billetterie
         if (contractType !== "agency_service") {
+
             await financialOperationService.create({
-                reservation_id: operation.id, // lien avec l'opération
+                operation_id: operation.id,
                 contract_id: operation.contract_id,
-                source: contractType === "caution_only" ? "caution" : "stock",
+                source: contractType === "caution_only"
+                    ? "caution"
+                    : "stock",
                 type: "deduction",
                 amount: operation.total_amount,
-                description: `Déduction ${contractType} pour l'opération client ${operation.client_name}`
+                description:
+                    `Déduction ${contractType} pour l'opération client ${operation.client_name}`,
+                sync_status: "dirty"
             });
         }
 
-        return { operation, segments };
+        return { operation, segments: segmentsToUse };
     }
 }
 
