@@ -21,11 +21,7 @@ interface Option {
     label: string;
 }
 
-export default function OperationForm({
-    initialData,
-    onSubmit,
-    onCancel
-}: Props) {
+export default function OperationForm({ initialData, onSubmit, onCancel }: Props) {
 
     const [formData, setFormData] = useState<Partial<Operations>>({
         partner_id: initialData?.partner_id ?? "",
@@ -46,26 +42,26 @@ export default function OperationForm({
     const [serviceOptions, setServiceOptions] = useState<Option[]>([]);
 
     /* ========================= */
-    /* LOAD DATA                 */
+    /* CHARGER PARTENAIRES & SERVICES */
     /* ========================= */
     useEffect(() => {
-        const load = async () => {
-            const partners = await partnerService.getAll();
-            const services = await serviceService.getAll();
+        const loadOptions = async () => {
+            try {
+                const partners = await partnerService.getAll();
+                const services = await serviceService.getAll();
 
-            setPartnerOptions(
-                partners.map(p => ({ id: p.id, label: p.name }))
-            );
-
-            setServiceOptions(
-                services.map(s => ({ id: s.id, label: s.name ?? "" }))
-            );
+                setPartnerOptions(partners.map(p => ({ id: p.id, label: p.name })));
+                setServiceOptions(services.map(s => ({ id: s.id, label: s.name ?? "" })));
+            } catch (err) {
+                console.error("Erreur chargement partenaires ou services :", err);
+            }
         };
-        load();
+
+        loadOptions();
     }, []);
 
     /* ========================= */
-    /* CHARGER CONTRAT DU PARTENAIRE SÉLECTIONNÉ */
+    /* CHARGER CONTRAT ACTIF DU PARTENAIRE SÉLECTIONNÉ */
     /* ========================= */
     useEffect(() => {
         const loadContract = async () => {
@@ -75,59 +71,67 @@ export default function OperationForm({
                 return;
             }
 
-            const contracts: Contract[] = await contractService.getByPartner(formData.partner_id);
+            try {
+                const contracts: Contract[] = await contractService.getByPartner(formData.partner_id);
+                const activeContract = contracts.find(c => c.status === "active");
 
-            // On ne garde que le contrat actif
-            const activeContract = contracts.find(c => c.status === "active");
+                if (activeContract) {
+                    setContractOptions([{
+                        id: activeContract.id,
+                        label: `${activeContract.contract_type} (${activeContract.status})`
+                    }]);
 
-            if (activeContract) {
-                setContractOptions([{
-                    id: activeContract.id,
-                    label: `${activeContract.contract_type} (${activeContract.status})`
-                }]);
-
-                setFormData(prev => ({
-                    ...prev,
-                    contract_id: activeContract.id
-                }));
-            } else {
-                setContractOptions([]);
-                setFormData(prev => ({ ...prev, contract_id: "" }));
+                    setFormData(prev => ({ ...prev, contract_id: activeContract.id }));
+                } else {
+                    setContractOptions([]);
+                    setFormData(prev => ({ ...prev, contract_id: "" }));
+                }
+            } catch (err) {
+                console.error("Erreur chargement contrat :", err);
             }
         };
 
         loadContract();
     }, [formData.partner_id]);
 
+    /* ========================= */
+    /* GÉNÉRER RÉFÉRENCE REÇU */
+    /* ========================= */
     useEffect(() => {
-        const generateReceiptReference = async () => {
+        const generateReceiptReference = async (dateStr: string) => {
+            try {
+                const existingOps = await operationService.getByDate(dateStr);
+                const nextNumber = existingOps.length + 1;
+                const numberStr = String(nextNumber).padStart(4, "0");
+                return `${dateStr}-${numberStr}`;
+            } catch (err) {
+                console.error("Erreur génération référence reçu :", err);
+                return `${dateStr}-0001`;
+            }
+        };
+
+        const updateReference = async () => {
             const date = formData.date_demande
                 ? formData.date_demande.slice(0, 10)
                 : new Date().toISOString().slice(0, 10);
 
-            const existingOps = await operationService.getByDate(date);
-            const nextNumber = existingOps.length + 1;
+            const generatedRef = await generateReceiptReference(date);
 
-            const numberStr = String(nextNumber).padStart(4, "0");
-            const generatedRef = `${date}-${numberStr}`;
-
-            setFormData(prev => ({
-                ...prev,
-                receipt_reference: generatedRef
-            }));
+            setFormData(prev => ({ ...prev, receipt_reference: generatedRef }));
         };
 
-        generateReceiptReference();
+        updateReference();
     }, [formData.date_demande]);
 
-    const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-    ) => {
+    /* ========================= */
+    /* HANDLE CHANGE             */
+    /* ========================= */
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
 
         setFormData(prev => ({
             ...prev,
-            [name]: name.includes("amount")
+            [name]: ["total_amount", "total_commission", "total_tax"].includes(name)
                 ? Number(value)
                 : value
         }));
@@ -138,6 +142,9 @@ export default function OperationForm({
         onSubmit(formData);
     };
 
+    /* ========================= */
+    /* RENDER FORM               */
+    /* ========================= */
     return (
         <form onSubmit={handleSubmit} className="app-form">
             <div className="form-grid">
@@ -152,9 +159,7 @@ export default function OperationForm({
                         required
                     >
                         <option value="">-- sélectionner --</option>
-                        {partnerOptions.map(o =>
-                            <option key={o.id} value={o.id}>{o.label}</option>
-                        )}
+                        {partnerOptions.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
                     </select>
                 </div>
 
@@ -168,9 +173,7 @@ export default function OperationForm({
                         required
                     >
                         <option value="">-- sélectionner --</option>
-                        {contractOptions.map(o =>
-                            <option key={o.id} value={o.id}>{o.label}</option>
-                        )}
+                        {contractOptions.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
                     </select>
                 </div>
 
@@ -184,9 +187,7 @@ export default function OperationForm({
                         required
                     >
                         <option value="">-- sélectionner --</option>
-                        {serviceOptions.map(o =>
-                            <option key={o.id} value={o.id}>{o.label}</option>
-                        )}
+                        {serviceOptions.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
                     </select>
                 </div>
 
