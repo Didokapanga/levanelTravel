@@ -53,19 +53,23 @@ export default function SegmentOperationForm({ initialData, onSubmit, onCancel }
     /* LOAD DATA                 */
     /* ========================= */
     useEffect(() => {
-        const loadOptions = async () => {
-            const airlines: Airline[] = await airlineService.getAll();
-            const systems: System[] = await systemService.getAll();
-            const itineraires: Itineraire[] = await itineraireService.getAll();
-            const ops: OperationWithDetails[] = await operationService.getAllWithDetails();
+    const loadOptions = async () => {
+        const airlines: Airline[] = await airlineService.getAll();
+        const systems: System[] = await systemService.getAll();
+        const itineraires: Itineraire[] = await itineraireService.getAll();
+        const ops: OperationWithDetails[] = await operationService.getAllWithDetails();
 
-            setAirlineOptions(airlines.map(a => ({ id: a.id, label: a.name ?? "" })));
-            setSystemOptions(systems.map(s => ({ id: s.id, label: s.name ?? "" })));
-            setItineraireOptions(itineraires.map(i => ({ id: i.id, label: i.code ?? "" })));
-            setOperations(ops.map(o => ({ id: o.id, label: o.client_name })));
-        };
-        loadOptions();
-    }, []);
+        setAirlineOptions(airlines.map(a => ({ id: a.id, label: a.name ?? "" })));
+        setSystemOptions(systems.map(s => ({ id: s.id, label: s.name ?? "" })));
+        setItineraireOptions(itineraires.map(i => ({ id: i.id, label: i.code ?? "" })));
+
+        // 🔹 Filtrer uniquement les opérations pending
+        const pendingOps = ops.filter(o => o.status === "pending");
+
+        setOperations(pendingOps.map(o => ({ id: o.id, label: o.client_name })));
+    };
+    loadOptions();
+}, []);
 
     /* ========================= */
     /* HANDLE CHANGE             */
