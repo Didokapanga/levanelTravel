@@ -9,6 +9,7 @@ import type { Contract } from "../../types/contract";
 import { partnerService } from "../../services/PartnerService";
 import { contractService } from "../../services/ContractService";
 import { serviceService } from "../../services/ServiceService";
+import { operationService } from "../../services/OperationService";
 
 interface Props {
     initialData?: Partial<Operations>;
@@ -78,6 +79,30 @@ export default function OperationForm({
 
         load();
     }, []);
+
+    useEffect(() => {
+        const generateReceiptReference = async () => {
+            // date au format YYYY-MM-DD
+            const date = formData.date_demande
+                ? formData.date_demande.slice(0, 10)
+                : new Date().toISOString().slice(0, 10);
+
+            // récupère le nombre d'opérations déjà créées pour cette date
+            const existingOps = await operationService.getByDate(date); // renvoie un tableau d'opérations
+            const nextNumber = existingOps.length + 1; // +1 pour le prochain
+
+            const numberStr = String(nextNumber).padStart(4, "0"); // "0001"
+            const generatedRef = `${date}-${numberStr}`;
+
+            setFormData(prev => ({
+                ...prev,
+                receipt_reference: generatedRef
+            }));
+        };
+
+        generateReceiptReference();
+    }, [formData.date_demande]);
+
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -213,7 +238,7 @@ export default function OperationForm({
                     <input
                         name="receipt_reference"
                         value={formData.receipt_reference}
-                        onChange={handleChange}
+                        readOnly           // ✅ rend l’input en lecture seule
                     />
                 </div>
 

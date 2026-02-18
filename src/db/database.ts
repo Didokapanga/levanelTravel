@@ -38,7 +38,7 @@ export class AppDatabase extends Dexie {
   constructor() {
     super('app_database');
 
-    this.version(5).stores({
+    this.version(7).stores({
       users: `
         &id,
         &username,
@@ -107,6 +107,7 @@ export class AppDatabase extends Dexie {
         &id,
         contract_id,
         sync_status,
+        contract_type,
         is_deleted,
         updated_at
       `,
@@ -138,7 +139,7 @@ export class AppDatabase extends Dexie {
         partner_id,
         service_id,
         contract_id,
-        date_emission,
+        date_demande,
         date_emission,
         total_amount,
         total_commission,

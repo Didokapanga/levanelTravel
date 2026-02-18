@@ -103,7 +103,6 @@ export default function CashFlowPage() {
                 </div>
             </div>
 
-            <div className="page-body">
                 <Table
                     columns={columns}
                     data={cashFlows}
@@ -122,7 +121,6 @@ export default function CashFlowPage() {
                         </>
                     )}
                 />
-            </div>
 
             <Modal
                 isOpen={isModalOpen}

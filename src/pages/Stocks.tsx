@@ -102,7 +102,6 @@ export default function Stocks() {
                 </div>
             </div>
 
-            <div className="page-body">
                 <Table
                     columns={columns}
                     data={stocks}
@@ -123,7 +122,6 @@ export default function Stocks() {
                         </>
                     )}
                 />
-            </div>
 
             <Modal
                 isOpen={isModalOpen}

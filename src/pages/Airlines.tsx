@@ -95,7 +95,6 @@ export default function Airlines() {
                 </div>
             </div>
 
-            <div className="page-body">
                 <Table
                     columns={columns}
                     data={airlines}
@@ -114,7 +113,6 @@ export default function Airlines() {
                         </>
                     )}
                 />
-            </div>
 
             <Modal
                 isOpen={isModalOpen}

@@ -95,7 +95,6 @@ export default function Systems() {
                 </div>
             </div>
 
-            <div className="page-body">
                 <Table
                     columns={columns}
                     data={systems}
@@ -116,7 +115,6 @@ export default function Systems() {
                         </>
                     )}
                 />
-            </div>
 
             <Modal
                 isOpen={isModalOpen}

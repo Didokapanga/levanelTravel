@@ -23,6 +23,14 @@ export class OperationsRepository extends BaseRepository<Operations> {
             .and(o => !o.is_deleted)
             .toArray();
     }
+
+    async findByDate(date: string): Promise<Operations[]> {
+        return this.table
+            .where("date_demande")
+            .equals(date)
+            .and(o => !o.is_deleted)
+            .toArray();
+    }
 }
 
 export const operationsRepo = new OperationsRepository();

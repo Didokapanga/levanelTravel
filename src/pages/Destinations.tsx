@@ -95,7 +95,6 @@ export default function Destination() {
                 </div>
             </div>
 
-            <div className="page-body">
                 <Table
                     columns={columns}
                     data={itineraires}
@@ -116,7 +115,6 @@ export default function Destination() {
                         </>
                     )}
                 />
-            </div>
 
             <Modal
                 isOpen={isModalOpen}

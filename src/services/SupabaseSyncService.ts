@@ -2,10 +2,8 @@ import { db } from "../db/database";
 import type { BaseEntity } from "../types/base";
 import { supabase } from "./supabaseClient";
 
-/**
- * Tables synchronisées
- */
-const syncTables = [
+// Toutes tes tables à synchroniser
+export const syncTables = [
     "users",
     "systems",
     "services",
@@ -15,11 +13,11 @@ const syncTables = [
     "contracts",
     "cautions",
     "stocks",
-    "financial_operations",
-    "cash_flows",
     "operations",
     "orther_operations",
     "operation_segments",
+    "financial_operations",
+    "cash_flows",
     "audit_logs",
     "change_logs",
 ] as const;

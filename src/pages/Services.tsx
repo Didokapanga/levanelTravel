@@ -77,9 +77,7 @@ export default function Services() {
             </div>
 
             {/* BODY */}
-            <div className="page-body">
-                <Table columns={columns} data={services} />
-            </div>
+            <Table columns={columns} data={services} />
 
             {/* MODAL */}
             <Modal

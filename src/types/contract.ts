@@ -17,8 +17,8 @@ export interface Contract extends BaseEntity {
     contract_type: ContractType;
     status: ContractStatus;
 
-    start_date: string;     // ISO
-    end_date?: string;      // ISO
+    start_date: string | null;   // ISO string ou null
+    end_date?: string | null;    // ISO string ou null
 
     description?: string;
 }

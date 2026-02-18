@@ -203,8 +203,6 @@ export default function OperationsPage() {
                 onChange={setActiveTab}
             />
 
-            <div className="page-body">
-
                 {/* ======================= */}
                 {/* BILLETTERIE             */}
                 {/* ======================= */}
@@ -318,7 +316,6 @@ export default function OperationsPage() {
                     <div>Contenu Rapport…</div>
                 )}
 
-            </div>
         </div>
     );
 }

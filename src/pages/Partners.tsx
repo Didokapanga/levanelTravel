@@ -77,9 +77,7 @@ export default function Partners() {
             </div>
 
             {/* BODY */}
-            <div className="page-body">
-                <Table columns={columns} data={partners} />
-            </div>
+            <Table columns={columns} data={partners} />
 
             {/* MODAL */}
             <Modal

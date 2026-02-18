@@ -117,7 +117,6 @@ export default function Contracts() {
                 </div>
             </div>
 
-            <div className="page-body">
                 <Table
                     columns={columns}
                     data={contracts}
@@ -138,7 +137,6 @@ export default function Contracts() {
                         </>
                     )}
                 />
-            </div>
 
             <Modal
                 isOpen={isModalOpen}

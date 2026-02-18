@@ -128,8 +128,6 @@ export default function SegmentOperations() {
                 </div>
             </div>
 
-            <div className="page-body">
-
                 {/* ===== Table ===== */}
                 <Table
                     columns={columns}
@@ -166,7 +164,6 @@ export default function SegmentOperations() {
                     />
                 </Modal>
 
-            </div>
         </div>
     );
 }

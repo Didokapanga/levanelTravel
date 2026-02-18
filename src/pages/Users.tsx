@@ -84,9 +84,7 @@ export default function Users() {
                 </div>
             </div>
 
-            <div className="page-body">
-                <Table columns={columns} data={users} />
-            </div>
+            <Table columns={columns} data={users} />
 
             <Modal
                 isOpen={isModalOpen}

@@ -60,12 +60,10 @@ export default function FinancialOperationsPage() {
                 </div>
             </div>
 
-            <div className="page-body">
                 <Table
                     columns={columns}
                     data={operations}
                 />
-            </div>
         </div>
     );
 }

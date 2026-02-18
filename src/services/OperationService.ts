@@ -123,6 +123,10 @@ export class OperationService {
             };
         });
     }
+
+    async getByDate(date: string): Promise<Operations[]> {
+        return operationsRepo.findByDate(date);
+    }
 }
 
 export const operationService = new OperationService();
