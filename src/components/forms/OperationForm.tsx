@@ -1,5 +1,4 @@
 // src/components/forms/OperationForm.tsx
-
 import { useEffect, useState } from "react";
 import { Button } from "../Button";
 
@@ -49,49 +48,67 @@ export default function OperationForm({
     /* ========================= */
     /* LOAD DATA                 */
     /* ========================= */
-
     useEffect(() => {
-
         const load = async () => {
-
             const partners = await partnerService.getAll();
-            const contracts: Contract[] = await contractService.getAll();
             const services = await serviceService.getAll();
 
             setPartnerOptions(
                 partners.map(p => ({ id: p.id, label: p.name }))
             );
 
-            setContractOptions(
-                contracts.map(c => ({
-                    id: c.id,
-                    label: `${c.contract_type} (${c.status})`
-                }))
-            );
-
             setServiceOptions(
-                services.map(s => ({
-                    id: s.id,
-                    label: s.name ?? s.name
-                }))
+                services.map(s => ({ id: s.id, label: s.name ?? "" }))
             );
         };
-
         load();
     }, []);
 
+    /* ========================= */
+    /* CHARGER CONTRAT DU PARTENAIRE SÉLECTIONNÉ */
+    /* ========================= */
+    useEffect(() => {
+        const loadContract = async () => {
+            if (!formData.partner_id) {
+                setContractOptions([]);
+                setFormData(prev => ({ ...prev, contract_id: "" }));
+                return;
+            }
+
+            const contracts: Contract[] = await contractService.getByPartner(formData.partner_id);
+
+            // On ne garde que le contrat actif
+            const activeContract = contracts.find(c => c.status === "active");
+
+            if (activeContract) {
+                setContractOptions([{
+                    id: activeContract.id,
+                    label: `${activeContract.contract_type} (${activeContract.status})`
+                }]);
+
+                setFormData(prev => ({
+                    ...prev,
+                    contract_id: activeContract.id
+                }));
+            } else {
+                setContractOptions([]);
+                setFormData(prev => ({ ...prev, contract_id: "" }));
+            }
+        };
+
+        loadContract();
+    }, [formData.partner_id]);
+
     useEffect(() => {
         const generateReceiptReference = async () => {
-            // date au format YYYY-MM-DD
             const date = formData.date_demande
                 ? formData.date_demande.slice(0, 10)
                 : new Date().toISOString().slice(0, 10);
 
-            // récupère le nombre d'opérations déjà créées pour cette date
-            const existingOps = await operationService.getByDate(date); // renvoie un tableau d'opérations
-            const nextNumber = existingOps.length + 1; // +1 pour le prochain
+            const existingOps = await operationService.getByDate(date);
+            const nextNumber = existingOps.length + 1;
 
-            const numberStr = String(nextNumber).padStart(4, "0"); // "0001"
+            const numberStr = String(nextNumber).padStart(4, "0");
             const generatedRef = `${date}-${numberStr}`;
 
             setFormData(prev => ({
@@ -102,7 +119,6 @@ export default function OperationForm({
 
         generateReceiptReference();
     }, [formData.date_demande]);
-
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -124,9 +140,9 @@ export default function OperationForm({
 
     return (
         <form onSubmit={handleSubmit} className="app-form">
-
             <div className="form-grid">
 
+                {/* Partenaire */}
                 <div className="form-field">
                     <label>Partenaire</label>
                     <select
@@ -142,6 +158,7 @@ export default function OperationForm({
                     </select>
                 </div>
 
+                {/* Contrat */}
                 <div className="form-field">
                     <label>Contrat</label>
                     <select
@@ -157,6 +174,7 @@ export default function OperationForm({
                     </select>
                 </div>
 
+                {/* Service */}
                 <div className="form-field">
                     <label>Service</label>
                     <select
@@ -172,6 +190,7 @@ export default function OperationForm({
                     </select>
                 </div>
 
+                {/* Client */}
                 <div className="form-field">
                     <label>Client</label>
                     <input
@@ -182,6 +201,7 @@ export default function OperationForm({
                     />
                 </div>
 
+                {/* Date demande */}
                 <div className="form-field">
                     <label>Date demande</label>
                     <input
@@ -192,6 +212,7 @@ export default function OperationForm({
                     />
                 </div>
 
+                {/* Date émission */}
                 <div className="form-field">
                     <label>Date émission</label>
                     <input
@@ -202,6 +223,7 @@ export default function OperationForm({
                     />
                 </div>
 
+                {/* Montant total */}
                 <div className="form-field">
                     <label>Montant total</label>
                     <input
@@ -213,6 +235,7 @@ export default function OperationForm({
                     />
                 </div>
 
+                {/* Commission */}
                 <div className="form-field">
                     <label>Commission</label>
                     <input
@@ -223,6 +246,7 @@ export default function OperationForm({
                     />
                 </div>
 
+                {/* Taxe */}
                 <div className="form-field">
                     <label>Taxe</label>
                     <input
@@ -233,15 +257,17 @@ export default function OperationForm({
                     />
                 </div>
 
+                {/* Référence reçu */}
                 <div className="form-field">
                     <label>Référence reçu</label>
                     <input
                         name="receipt_reference"
                         value={formData.receipt_reference}
-                        readOnly           // ✅ rend l’input en lecture seule
+                        readOnly
                     />
                 </div>
 
+                {/* Observation */}
                 <div className="form-field">
                     <label>Observation</label>
                     <input
@@ -259,4 +285,4 @@ export default function OperationForm({
             </div>
         </form>
     );
-}
+        }
