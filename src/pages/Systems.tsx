@@ -8,11 +8,16 @@ import "../styles/pages.css";
 import { systemService } from "../services/SystemService";
 import type { System } from "../types/systems";
 import { ButtonTable } from "../components/ButtonTable";
+import { useAuth } from "../auth/AuthContext";
+import { canEditOperation } from "../utils/permissions";
 
 export default function Systems() {
     const [systems, setSystems] = useState<System[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSystem, setEditingSystem] = useState<System | null>(null);
+
+    const { user } = useAuth();
+    const isAllowed = canEditOperation(user?.role);
 
     const columns: Column<System>[] = [
         { key: "name", label: "Nom du système" },
@@ -83,22 +88,24 @@ export default function Systems() {
                     <p>Liste complète des systèmes</p>
                 </div>
                 <div className="page-header-right">
-                    <Button
-                        label="Créer un système"
-                        icon={<FaPlus />}
-                        variant="info"
-                        onClick={() => {
-                            setEditingSystem(null);
-                            setIsModalOpen(true);
-                        }}
-                    />
+                    {isAllowed && (
+                        <Button
+                            label="Créer un système"
+                            icon={<FaPlus />}
+                            variant="info"
+                            onClick={() => {
+                                setEditingSystem(null);
+                                setIsModalOpen(true);
+                            }}
+                        />)}
                 </div>
             </div>
 
-                <Table
-                    columns={columns}
-                    data={systems}
-                    actions={(row: System) => (
+            <Table
+                columns={columns}
+                data={systems}
+                actions={(row: System) => (
+                    isAllowed ? (
                         <>
                             <ButtonTable
                                 icon={<FaEdit />}
@@ -113,8 +120,9 @@ export default function Systems() {
                                 label="Supprimer"
                             />
                         </>
-                    )}
-                />
+                    ) : null
+                )}
+            />
 
             <Modal
                 isOpen={isModalOpen}

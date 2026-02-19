@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import { Button } from "../components/Button";
 import { Table, type Column } from "../components/Table";
 import { Modal } from "../components/Modal";
@@ -7,10 +7,17 @@ import "../styles/pages.css";
 import ServiceForm from "../components/forms/ServiceForm";
 import type { Service } from "../types/service";
 import { serviceService } from "../services/ServiceService";
+import { ButtonTable } from "../components/ButtonTable";
+import { useAuth } from "../auth/AuthContext";
+import { canEditOperation } from "../utils/permissions";
 
-export default function Services() {
+export default function ServicesPage() {
     const [services, setServices] = useState<Service[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingService, setEditingService] = useState<Service | null>(null);
+
+    const { user } = useAuth();
+    const isAllowed = canEditOperation(user?.role);
 
     const columns: Column<Service>[] = [
         { key: "name", label: "Nom du service" },
@@ -50,11 +57,31 @@ export default function Services() {
         loadServices();
     }, []);
 
-    // Création d'un service
-    const handleCreateService = async (data: Partial<Service>) => {
-        const newService = await serviceService.create(data);
-        setServices(prev => [...prev, newService]);
+    // Création ou mise à jour
+    const handleSubmit = async (data: Partial<Service>) => {
+        if (editingService) {
+            const updated = await serviceService.update(editingService.id, data);
+            if (updated) {
+                setServices(prev =>
+                    prev.map(s => (s.id === updated.id ? updated : s))
+                );
+            }
+            setEditingService(null);
+        } else {
+            const created = await serviceService.create(data);
+            setServices(prev => [...prev, created]);
+        }
         setIsModalOpen(false);
+    };
+
+    const handleEdit = (service: Service) => {
+        setEditingService(service);
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = async (id: string) => {
+        await serviceService.delete(id);
+        setServices(prev => prev.filter(s => s.id !== id));
     };
 
     return (
@@ -67,27 +94,60 @@ export default function Services() {
                     <p>Liste complète des services disponibles</p>
                 </div>
                 <div className="page-header-right">
-                    <Button
-                        label="Créer un service"
-                        icon={<FaPlus />}
-                        variant="info"
-                        onClick={() => setIsModalOpen(true)}
-                    />
+                    {isAllowed && (
+                        <Button
+                            label="Créer un service"
+                            icon={<FaPlus />}
+                            variant="info"
+                            onClick={() => {
+                                setEditingService(null);
+                                setIsModalOpen(true);
+                            }}
+                        />
+                    )}
                 </div>
             </div>
 
-            {/* BODY */}
-            <Table columns={columns} data={services} />
+            {/* TABLEAU */}
+            <Table
+                columns={columns}
+                data={services}
+                actions={(row: Service) =>
+                    isAllowed ? (
+                        <>
+                            <ButtonTable
+                                icon={<FaEdit />}
+                                variant="secondary"
+                                onClick={() => handleEdit(row)}
+                                label="Modifier"
+                            />
+                            <ButtonTable
+                                icon={<FaTrash />}
+                                variant="danger"
+                                onClick={() => handleDelete(row.id)}
+                                label="Supprimer"
+                            />
+                        </>
+                    ) : null
+                }
+            />
 
             {/* MODAL */}
             <Modal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title="Créer un service"
+                onClose={() => {
+                    setEditingService(null);
+                    setIsModalOpen(false);
+                }}
+                title={editingService ? "Modifier un service" : "Créer un service"}
             >
                 <ServiceForm
-                    onCancel={() => setIsModalOpen(false)}
-                    onSubmit={handleCreateService}
+                    initialData={editingService ?? undefined}
+                    onSubmit={handleSubmit}
+                    onCancel={() => {
+                        setEditingService(null);
+                        setIsModalOpen(false);
+                    }}
                 />
             </Modal>
         </div>

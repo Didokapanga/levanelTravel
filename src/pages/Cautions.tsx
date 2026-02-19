@@ -11,12 +11,17 @@ import { Modal } from "../components/Modal";
 
 import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import CautionForm from "../components/forms/CautionForm";
+import { useAuth } from "../auth/AuthContext";
+import { canEditOperation } from "../utils/permissions";
 
 export default function Cautions() {
 
     const [cautions, setCautions] = useState<CautionWithDetails[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editing, setEditing] = useState<CautionWithDetails | null>(null);
+
+    const { user } = useAuth();
+    const isAllowed = canEditOperation(user?.role);
 
     const loadData = async () => {
         const data = await cautionService.getAllWithDetails();
@@ -92,14 +97,15 @@ export default function Cautions() {
                     <p>Liste complète des cautions</p>
                 </div>
                 <div className="page-header-right">
-                    <Button
-                        label="Nouvelle caution"
-                        icon={<FaPlus />}
-                        onClick={() => {
-                            setEditing(null);
-                            setIsModalOpen(true);
-                        }}
-                    />
+                    {isAllowed && (
+                        <Button
+                            label="Nouvelle caution"
+                            icon={<FaPlus />}
+                            onClick={() => {
+                                setEditing(null);
+                                setIsModalOpen(true);
+                            }}
+                        />)}
                 </div>
             </div>
 
@@ -107,20 +113,21 @@ export default function Cautions() {
                 columns={columns}
                 data={cautions}
                 actions={(row) => (
-                    <>
-                        <ButtonTable
-                            icon={<FaEdit />}
-                            onClick={() => {
-                                setEditing(row);
-                                setIsModalOpen(true);
-                            }}
-                        />
-                        <ButtonTable
-                            icon={<FaTrash />}
-                            variant="danger"
-                            onClick={() => handleDelete(row.id)}
-                        />
-                    </>
+                    isAllowed ? (
+                        <>
+                            <ButtonTable
+                                icon={<FaEdit />}
+                                onClick={() => {
+                                    setEditing(row);
+                                    setIsModalOpen(true);
+                                }}
+                            />
+                            <ButtonTable
+                                icon={<FaTrash />}
+                                variant="danger"
+                                onClick={() => handleDelete(row.id)}
+                            />
+                        </>) : null
                 )}
             />
 

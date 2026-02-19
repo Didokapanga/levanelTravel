@@ -17,6 +17,8 @@ import type { OperationWithDetails } from "../types/operations";
 import type { OrtherOperations } from "../types/orther_operations";
 import { otherOperationService } from "../services/OtherOperationService";
 import OtherOperationForm from "../components/forms/OtherOperationForm";
+import { useAuth } from "../auth/AuthContext";
+import { canEditOperation } from "../utils/permissions";
 
 
 export default function OperationsPage() {
@@ -31,6 +33,8 @@ export default function OperationsPage() {
     const [isAssistModalOpen, setIsAssistModalOpen] = useState(false);
     const [editingAssist, setEditingAssist] = useState<OrtherOperations | null>(null);
 
+    const { user } = useAuth();
+    const isAllowed = canEditOperation(user?.role);
 
     /* ========================= */
     /* LOAD DATA                 */
@@ -203,12 +207,13 @@ export default function OperationsPage() {
                 onChange={setActiveTab}
             />
 
-                {/* ======================= */}
-                {/* BILLETTERIE             */}
-                {/* ======================= */}
-                {activeTab === "billetterie" && (
-                    <>
-                        <div style={{ marginBottom: 15 }}>
+            {/* ======================= */}
+            {/* BILLETTERIE             */}
+            {/* ======================= */}
+            {activeTab === "billetterie" && (
+                <>
+                    <div style={{ marginBottom: 15 }}>
+                        {isAllowed && (
                             <Button
                                 label="Nouvelle opération"
                                 icon={<FaPlus />}
@@ -218,12 +223,14 @@ export default function OperationsPage() {
                                     setIsModalOpen(true);
                                 }}
                             />
-                        </div>
+                        )}
+                    </div>
 
-                        <Table
-                            columns={columns}
-                            data={operations}
-                            actions={(row: OperationWithDetails) => (
+                    <Table
+                        columns={columns}
+                        data={operations}
+                        actions={(row: OperationWithDetails) => (
+                            isAllowed ? (
                                 <>
                                     <ButtonTable
                                         icon={<FaEdit />}
@@ -236,32 +243,34 @@ export default function OperationsPage() {
                                         onClick={() => handleDelete(row.id)}
                                     />
                                 </>
-                            )}
+                            ) : null
+                        )}
+                    />
+
+                    <Modal
+                        isOpen={isModalOpen}
+                        onClose={() => setIsModalOpen(false)}
+                        title={editingOperation ? "Modifier opération" : "Créer opération"}
+                    >
+                        <OperationForm
+                            initialData={editingOperation ?? undefined}
+                            onSubmit={handleSubmit}
+                            onCancel={() => {
+                                setEditingOperation(null);
+                                setIsModalOpen(false);
+                            }}
                         />
+                    </Modal>
+                </>
+            )}
 
-                        <Modal
-                            isOpen={isModalOpen}
-                            onClose={() => setIsModalOpen(false)}
-                            title={editingOperation ? "Modifier opération" : "Créer opération"}
-                        >
-                            <OperationForm
-                                initialData={editingOperation ?? undefined}
-                                onSubmit={handleSubmit}
-                                onCancel={() => {
-                                    setEditingOperation(null);
-                                    setIsModalOpen(false);
-                                }}
-                            />
-                        </Modal>
-                    </>
-                )}
-
-                {/* ======================= */}
-                {/* ASSISTANCE              */}
-                {/* ======================= */}
-                {activeTab === "assistance" && (
-                    <>
-                        <div style={{ marginBottom: 15 }}>
+            {/* ======================= */}
+            {/* ASSISTANCE              */}
+            {/* ======================= */}
+            {activeTab === "assistance" && (
+                <>
+                    <div style={{ marginBottom: 15 }}>
+                        {isAllowed && (
                             <Button
                                 label="Nouvelle assistance"
                                 icon={<FaPlus />}
@@ -271,12 +280,14 @@ export default function OperationsPage() {
                                     setIsAssistModalOpen(true);
                                 }}
                             />
-                        </div>
+                        )}
+                    </div>
 
-                        <Table
-                            columns={assistColumns}
-                            data={assistances}
-                            actions={(row: OrtherOperations) => (
+                    <Table
+                        columns={assistColumns}
+                        data={assistances}
+                        actions={(row: OrtherOperations) => (
+                            isAllowed ? (
                                 <>
                                     <ButtonTable
                                         icon={<FaEdit />}
@@ -289,32 +300,33 @@ export default function OperationsPage() {
                                         onClick={() => handleAssistDelete(row.id)}
                                     />
                                 </>
-                            )}
+                            ) : null
+                        )}
+                    />
+
+                    <Modal
+                        isOpen={isAssistModalOpen}
+                        onClose={() => setIsAssistModalOpen(false)}
+                        title={editingAssist ? "Modifier assistance" : "Créer assistance"}
+                    >
+                        <OtherOperationForm
+                            initialData={editingAssist ?? undefined}
+                            onSubmit={handleAssistSubmit}
+                            onCancel={() => {
+                                setEditingAssist(null);
+                                setIsAssistModalOpen(false);
+                            }}
                         />
+                    </Modal>
+                </>
+            )}
 
-                        <Modal
-                            isOpen={isAssistModalOpen}
-                            onClose={() => setIsAssistModalOpen(false)}
-                            title={editingAssist ? "Modifier assistance" : "Créer assistance"}
-                        >
-                            <OtherOperationForm
-                                initialData={editingAssist ?? undefined}
-                                onSubmit={handleAssistSubmit}
-                                onCancel={() => {
-                                    setEditingAssist(null);
-                                    setIsAssistModalOpen(false);
-                                }}
-                            />
-                        </Modal>
-                    </>
-                )}
-
-                {/* ======================= */}
-                {/* RAPPORT                 */}
-                {/* ======================= */}
-                {activeTab === "rapport" && (
-                    <div>Contenu Rapport…</div>
-                )}
+            {/* ======================= */}
+            {/* RAPPORT                 */}
+            {/* ======================= */}
+            {activeTab === "rapport" && (
+                <div>Contenu Rapport…</div>
+            )}
 
         </div>
     );

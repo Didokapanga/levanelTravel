@@ -14,6 +14,7 @@ interface AuthContextType {
     user: User | null;
     login: (username: string, password: string) => Promise<void>;
     logout: () => void;
+    isManager: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -71,7 +72,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return (
         <AuthContext.Provider
-            value={{ isAuthenticated, isLoading, user, login, logout }}
+            value={{ isAuthenticated, isLoading, user, login, logout, isManager: () => user?.role === "manager" }}
         >
             {children}
         </AuthContext.Provider>

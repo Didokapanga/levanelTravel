@@ -9,16 +9,12 @@ interface ListItem {
 
 interface Props {
     leftTitle: string;
-    rightTitle: string;
     leftItems: ListItem[];
-    rightItems: ListItem[];
 }
 
 export default function ListSection({
     leftTitle,
-    rightTitle,
     leftItems,
-    rightItems
 }: Props) {
 
     const renderList = (items: ListItem[]) => (
@@ -51,12 +47,6 @@ export default function ListSection({
                 <div className="list-header">{leftTitle}</div>
                 {renderList(leftItems)}
             </div>
-
-            <div className="list-column">
-                <div className="list-header">{rightTitle}</div>
-                {renderList(rightItems)}
-            </div>
-
         </div>
     );
 }

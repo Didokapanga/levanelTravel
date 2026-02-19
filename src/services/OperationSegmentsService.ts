@@ -5,6 +5,7 @@ import type {
     OperationSegments,
     OperationSegmentWithDetails
 } from "../types/operation_segments";
+import { operationService } from "./OperationService";
 
 class OperationSegmentsService {
 
@@ -30,6 +31,18 @@ class OperationSegmentsService {
 
     delete(id: string) {
         return operationSegmentsRepo.softDelete(id);
+    }
+
+    async getTotalServiceFeeValidated(): Promise<number> {
+
+        const validatedOps = await operationService.getValidated();
+        const segments = await operationSegmentsRepo.getAll();
+
+        const validatedIds = new Set(validatedOps.map(o => o.id));
+
+        return segments
+            .filter(s => validatedIds.has(s.operation_id))
+            .reduce((sum, s) => sum + Number(s.service_fee ?? 0), 0);
     }
 
     /* ============================ */
@@ -74,6 +87,17 @@ class OperationSegmentsService {
             })
         );
     }
+
+    async getUpdatesOrCancellations(): Promise<OperationSegmentWithDetails[]> {
+        const segments = await this.getAllWithDetails();
+
+        // Filtre uniquement les segments avec update_price ou cancel_price > 0
+        return segments.filter(s =>
+            (s.update_price && s.update_price > 0) ||
+            (s.cancel_price && s.cancel_price > 0)
+        );
+    }
+
 }
 
 export const operationSegmentsService = new OperationSegmentsService();

@@ -13,12 +13,17 @@ import "../styles/pages.css";
 import { operationSegmentsService } from "../services/OperationSegmentsService";
 import type { OperationSegments } from "../types/operation_segments";
 import type { OperationSegmentWithDetails } from "../types/operation_segments";
+import { useAuth } from "../auth/AuthContext";
+import { canEditOperation } from "../utils/permissions";
 
 export default function SegmentOperations() {
 
     const [segments, setSegments] = useState<OperationSegmentWithDetails[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSegment, setEditingSegment] = useState<OperationSegments | null>(null);
+
+    const { user } = useAuth();
+    const isAllowed = canEditOperation(user?.role);
 
     /* ========================= */
     /* LOAD DATA                 */
@@ -116,23 +121,26 @@ export default function SegmentOperations() {
 
                 {/* ===== Bouton ===== */}
                 <div style={{ marginBottom: 15 }}>
-                    <Button
-                        label="Nouveau segment"
-                        icon={<FaPlus />}
-                        variant="info"
-                        onClick={() => {
-                            setEditingSegment(null);
-                            setIsModalOpen(true);
-                        }}
-                    />
+                    {isAllowed && (
+                        <Button
+                            label="Nouveau segment"
+                            icon={<FaPlus />}
+                            variant="info"
+                            onClick={() => {
+                                setEditingSegment(null);
+                                setIsModalOpen(true);
+                            }}
+                        />
+                    )}
                 </div>
             </div>
 
-                {/* ===== Table ===== */}
-                <Table
-                    columns={columns}
-                    data={segments}
-                    actions={(row: OperationSegmentWithDetails) => (
+            {/* ===== Table ===== */}
+            <Table
+                columns={columns}
+                data={segments}
+                actions={(row: OperationSegmentWithDetails) => (
+                    isAllowed ? (
                         <>
                             <ButtonTable
                                 icon={<FaEdit />}
@@ -145,24 +153,25 @@ export default function SegmentOperations() {
                                 onClick={() => handleDelete(row.id)}
                             />
                         </>
-                    )}
-                />
+                    ) : null
+                )}
+            />
 
-                {/* ===== Modal ===== */}
-                <Modal
-                    isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
-                    title={editingSegment ? "Modifier segment" : "Créer segment"}
-                >
-                    <SegmentOperationForm
-                        initialData={editingSegment ?? undefined}
-                        onSubmit={handleSubmit}
-                        onCancel={() => {
-                            setEditingSegment(null);
-                            setIsModalOpen(false);
-                        }}
-                    />
-                </Modal>
+            {/* ===== Modal ===== */}
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={editingSegment ? "Modifier segment" : "Créer segment"}
+            >
+                <SegmentOperationForm
+                    initialData={editingSegment ?? undefined}
+                    onSubmit={handleSubmit}
+                    onCancel={() => {
+                        setEditingSegment(null);
+                        setIsModalOpen(false);
+                    }}
+                />
+            </Modal>
 
         </div>
     );

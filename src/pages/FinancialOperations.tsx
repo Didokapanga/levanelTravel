@@ -10,7 +10,11 @@ export default function FinancialOperationsPage() {
 
     // Colonnes du tableau
     const columns: Column<FinancialOperationWithDetails>[] = [
-        { key: "operation_id", label: "Opération" },
+        {
+            key: "receipt_reference",
+            label: "Référence Reçu",
+            render: row => row.receipt_reference ?? "-"
+        },
         { key: "contract_type", label: "Type contrat" },
         { key: "partner_name", label: "Partenaire" },
         { key: "source", label: "Source" },

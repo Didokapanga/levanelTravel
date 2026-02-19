@@ -32,13 +32,13 @@ export default function SegmentOperationForm({ initialData, onSubmit, onCancel }
         itineraire_id: initialData?.itineraire_id ?? "",
         ticket_number: initialData?.ticket_number ?? "",
         pnr: initialData?.pnr ?? "",
-        tht: initialData?.tht ?? 0,
-        tax: initialData?.tax ?? 0,
-        service_fee: initialData?.service_fee ?? 0,
-        commission: initialData?.commission ?? 0,
-        sold_debit: initialData?.sold_debit ?? 0,
-        amount_received: initialData?.amount_received ?? 0,
-        remaining_amount: initialData?.remaining_amount ?? 0,
+        tht: initialData?.tht,
+        tax: initialData?.tax,
+        service_fee: initialData?.service_fee,
+        commission: initialData?.commission,
+        sold_debit: initialData?.sold_debit,
+        amount_received: initialData?.amount_received,
+        remaining_amount: initialData?.remaining_amount,
         update_price: initialData?.update_price ?? 0,
         cancel_price: initialData?.cancel_price ?? 0
     });
@@ -53,23 +53,23 @@ export default function SegmentOperationForm({ initialData, onSubmit, onCancel }
     /* LOAD DATA                 */
     /* ========================= */
     useEffect(() => {
-    const loadOptions = async () => {
-        const airlines: Airline[] = await airlineService.getAll();
-        const systems: System[] = await systemService.getAll();
-        const itineraires: Itineraire[] = await itineraireService.getAll();
-        const ops: OperationWithDetails[] = await operationService.getAllWithDetails();
+        const loadOptions = async () => {
+            const airlines: Airline[] = await airlineService.getAll();
+            const systems: System[] = await systemService.getAll();
+            const itineraires: Itineraire[] = await itineraireService.getAll();
+            const ops: OperationWithDetails[] = await operationService.getAllWithDetails();
 
-        setAirlineOptions(airlines.map(a => ({ id: a.id, label: a.name ?? "" })));
-        setSystemOptions(systems.map(s => ({ id: s.id, label: s.name ?? "" })));
-        setItineraireOptions(itineraires.map(i => ({ id: i.id, label: i.code ?? "" })));
+            setAirlineOptions(airlines.map(a => ({ id: a.id, label: a.name ?? "" })));
+            setSystemOptions(systems.map(s => ({ id: s.id, label: s.name ?? "" })));
+            setItineraireOptions(itineraires.map(i => ({ id: i.id, label: i.code ?? "" })));
 
-        // 🔹 Filtrer uniquement les opérations pending
-        const pendingOps = ops.filter(o => o.status === "pending");
+            // 🔹 Filtrer uniquement les opérations pending
+            const pendingOps = ops.filter(o => o.status === "pending");
 
-        setOperations(pendingOps.map(o => ({ id: o.id, label: o.client_name })));
-    };
-    loadOptions();
-}, []);
+            setOperations(pendingOps.map(o => ({ id: o.id, label: o.client_name })));
+        };
+        loadOptions();
+    }, []);
 
     /* ========================= */
     /* HANDLE CHANGE             */
@@ -81,7 +81,7 @@ export default function SegmentOperationForm({ initialData, onSubmit, onCancel }
             const updated = {
                 ...prev,
                 [name]: ["tht", "tax", "service_fee", "amount_received", "commission"].includes(name)
-                    ? Number(value)
+                    ? Number(value.replace(",", "."))
                     : value
             };
 
@@ -143,7 +143,7 @@ export default function SegmentOperationForm({ initialData, onSubmit, onCancel }
                 {/* Airline */}
                 <div className="form-field">
                     <label>Airline</label>
-                    <select name="airline_id" value={formData.airline_id ?? ""} onChange={handleChange}>
+                    <select name="airline_id" value={formData.airline_id ?? ""} onChange={handleChange} required>
                         <option value="">-- sélectionner --</option>
                         {airlineOptions.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
                     </select>
@@ -152,7 +152,7 @@ export default function SegmentOperationForm({ initialData, onSubmit, onCancel }
                 {/* System */}
                 <div className="form-field">
                     <label>System</label>
-                    <select name="system_id" value={formData.system_id ?? ""} onChange={handleChange}>
+                    <select name="system_id" value={formData.system_id ?? ""} onChange={handleChange} required>
                         <option value="">-- sélectionner --</option>
                         {systemOptions.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
                     </select>
@@ -161,7 +161,7 @@ export default function SegmentOperationForm({ initialData, onSubmit, onCancel }
                 {/* Itinéraire */}
                 <div className="form-field">
                     <label>Itinéraire</label>
-                    <select name="itineraire_id" value={formData.itineraire_id ?? ""} onChange={handleChange}>
+                    <select name="itineraire_id" value={formData.itineraire_id ?? ""} onChange={handleChange} required>
                         <option value="">-- sélectionner --</option>
                         {itineraireOptions.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
                     </select>
@@ -170,35 +170,35 @@ export default function SegmentOperationForm({ initialData, onSubmit, onCancel }
                 {/* Ticket & PNR */}
                 <div className="form-field">
                     <label>Ticket Number</label>
-                    <input name="ticket_number" value={formData.ticket_number ?? ""} onChange={handleChange} />
+                    <input name="ticket_number" value={formData.ticket_number ?? ""} onChange={handleChange} required />
                 </div>
                 <div className="form-field">
                     <label>PNR</label>
-                    <input name="pnr" value={formData.pnr ?? ""} onChange={handleChange} />
+                    <input name="pnr" value={formData.pnr ?? ""} onChange={handleChange} required />
                 </div>
 
                 {/* THT, Tax, Service Fee */}
                 <div className="form-field">
                     <label>THT</label>
-                    <input type="number" name="tht" value={formData.tht ?? 0} onChange={handleChange} />
+                    <input type="number" name="tht" value={formData.tht} onChange={handleChange} required />
                 </div>
                 <div className="form-field">
                     <label>Tax</label>
-                    <input type="number" name="tax" value={formData.tax ?? 0} onChange={handleChange} />
+                    <input type="number" name="tax" value={formData.tax} onChange={handleChange} required />
                 </div>
                 <div className="form-field">
                     <label>Service Fee</label>
-                    <input type="number" name="service_fee" value={formData.service_fee ?? 0} onChange={handleChange} />
+                    <input type="number" name="service_fee" value={formData.service_fee} onChange={handleChange} required />
                 </div>
 
                 {/* Commission */}
                 <div className="form-field">
                     <label>% Commission</label>
-                    <input type="number" value={commissionPercent} onChange={handleCommissionPercent} />
+                    <input type="number" value={commissionPercent} onChange={handleCommissionPercent} required />
                 </div>
                 <div className="form-field">
                     <label>Commission</label>
-                    <input type="number" value={formData.commission ?? 0} readOnly />
+                    <input type="number" value={formData.commission} readOnly />
                 </div>
 
                 {/* TTC */}
@@ -210,27 +210,27 @@ export default function SegmentOperationForm({ initialData, onSubmit, onCancel }
                 {/* Amount Received & Remaining */}
                 <div className="form-field">
                     <label>Amount Received</label>
-                    <input type="number" name="amount_received" value={formData.amount_received ?? 0} onChange={handleChange} />
+                    <input type="number" name="amount_received" value={formData.amount_received} onChange={handleChange} required />
                 </div>
                 <div className="form-field">
                     <label>Remaining Amount</label>
-                    <input type="number" value={formData.remaining_amount ?? 0} readOnly />
+                    <input type="number" value={formData.remaining_amount} readOnly />
                 </div>
 
                 {/* Sold Debit */}
                 <div className="form-field">
                     <label>Sold Debit</label>
-                    <input type="number" value={formData.sold_debit ?? 0} readOnly />
+                    <input type="number" value={formData.sold_debit} readOnly />
                 </div>
 
                 {/* Update / Cancel Price */}
                 <div className="form-field">
                     <label>Update Price</label>
-                    <input type="number" name="update_price" value={formData.update_price ?? 0} onChange={handleChange} />
+                    <input type="number" name="update_price" value={formData.update_price} onChange={handleChange} />
                 </div>
                 <div className="form-field">
                     <label>Cancel Price</label>
-                    <input type="number" name="cancel_price" value={formData.cancel_price ?? 0} onChange={handleChange} />
+                    <input type="number" name="cancel_price" value={formData.cancel_price} onChange={handleChange} />
                 </div>
 
             </div>

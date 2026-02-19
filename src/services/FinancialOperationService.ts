@@ -3,6 +3,7 @@ import type { FinancialOperation, FinancialOperationWithDetails } from "../types
 import { financialOperationRepo } from "../db/repositories/FinancialOperationRepository";
 import { contractRepo } from "../db/repositories/ContractRepository";
 import { partnerRepo } from "../db/repositories/PartnerRepository";
+import { operationsRepo } from "../db/repositories/OperationsRepository";
 
 export class FinancialOperationService {
 
@@ -42,15 +43,18 @@ export class FinancialOperationService {
         const operations = await financialOperationRepo.getAll();
         const contracts = await contractRepo.getAll();
         const partners = await partnerRepo.getAll();
+        const receipt_reference = await operationsRepo.getAll();
 
         return operations.map(op => {
             const contract = contracts.find(c => c.id === op.contract_id);
             const partner = partners.find(p => p.id === contract?.partner_id);
+            const receipt = receipt_reference.find(o => o.id === op.operation_id);
 
             return {
                 ...op,
                 partner_name: partner?.name,
                 contract_type: contract?.contract_type,
+                receipt_reference: receipt?.receipt_reference,
             };
         });
     }

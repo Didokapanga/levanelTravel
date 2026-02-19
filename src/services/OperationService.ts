@@ -127,6 +127,63 @@ export class OperationService {
     async getByDate(date: string): Promise<Operations[]> {
         return operationsRepo.findByDate(date);
     }
+
+    /* ===================================================== */
+    /* DASHBOARD STATS                                       */
+    /* ===================================================== */
+
+    async getValidatedToday(): Promise<Operations[]> {
+        const today = new Date().toISOString().slice(0, 10);
+        const ops = await operationsRepo.getAll();
+
+        return ops.filter(o =>
+            o.status === "validated" &&
+            o.date_emission.startsWith(today)
+        );
+    }
+
+    async getValidated(): Promise<Operations[]> {
+        const ops = await operationsRepo.getAll();
+        return ops.filter(o => o.status === "validated");
+    }
+
+    async getTotalServiceFees(): Promise<number> {
+        const validated = await this.getValidated();
+
+        const todayStr = new Date().toISOString().slice(0, 10);
+
+        const todayOps = validated.filter(
+            op => op.date_demande.slice(0, 10) === todayStr
+        );
+
+        return todayOps.reduce(
+            (sum, op) => sum + Number(op.total_commission ?? 0),
+            0
+        );
+    }
+
+    async getValidatedTodayWithDetails(): Promise<OperationWithDetails[]> {
+
+        const today = new Date().toISOString().slice(0, 10);
+
+        const ops = await this.getAllWithDetails();
+
+        return ops.filter(o =>
+            o.status === "validated" &&
+            o.date_emission.startsWith(today)
+        );
+    }
+
+    async getCancelledToday(): Promise<Operations[]> {
+        const today = new Date().toISOString().slice(0, 10);
+        const ops = await operationsRepo.getAll();
+
+        return ops.filter(o =>
+            o.status === "cancelled" &&
+            o.date_emission?.startsWith(today)
+        );
+    }
+
 }
 
 export const operationService = new OperationService();

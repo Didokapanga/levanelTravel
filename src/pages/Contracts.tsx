@@ -10,12 +10,17 @@ import type { Contract } from "../types/contract";
 import type { Partner } from "../types/partner";
 import { ButtonTable } from "../components/ButtonTable";
 import ContractForm from "../components/forms/ContractForm";
+import { useAuth } from "../auth/AuthContext";
+import { canEditOperation } from "../utils/permissions";
 
 export default function Contracts() {
     const [contracts, setContracts] = useState<Contract[]>([]);
     const [partners, setPartners] = useState<Partner[]>([]); // <- nouvel état
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingContract, setEditingContract] = useState<Contract | null>(null);
+
+    const { user } = useAuth();
+    const isAllowed = canEditOperation(user?.role);
 
     const partnerMap = React.useMemo(() => {
         return Object.fromEntries(
@@ -105,22 +110,24 @@ export default function Contracts() {
                     <p>Liste complète des contrats</p>
                 </div>
                 <div className="page-header-right">
-                    <Button
-                        label="Créer un contrat"
-                        icon={<FaPlus />}
-                        variant="info"
-                        onClick={() => {
-                            setEditingContract(null);
-                            setIsModalOpen(true);
-                        }}
-                    />
+                    {isAllowed && (
+                        <Button
+                            label="Créer un contrat"
+                            icon={<FaPlus />}
+                            variant="info"
+                            onClick={() => {
+                                setEditingContract(null);
+                                setIsModalOpen(true);
+                            }}
+                        />)}
                 </div>
             </div>
 
-                <Table
-                    columns={columns}
-                    data={contracts}
-                    actions={(row: Contract) => (
+            <Table
+                columns={columns}
+                data={contracts}
+                actions={(row: Contract) => (
+                    isAllowed ? (
                         <>
                             <ButtonTable
                                 icon={<FaEdit />}
@@ -134,9 +141,9 @@ export default function Contracts() {
                                 onClick={() => handleDelete(row.id)}
                                 label="Supprimer"
                             />
-                        </>
-                    )}
-                />
+                        </>) : null
+                )}
+            />
 
             <Modal
                 isOpen={isModalOpen}

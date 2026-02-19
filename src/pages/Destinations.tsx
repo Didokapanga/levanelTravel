@@ -8,11 +8,16 @@ import "../styles/pages.css";
 import { itineraireService } from "../services/ItineraireService";
 import type { Itineraire } from "../types/Itineraire";
 import { ButtonTable } from "../components/ButtonTable";
+import { useAuth } from "../auth/AuthContext";
+import { canEditOperation } from "../utils/permissions";
 
 export default function Destination() {
     const [itineraires, setItineraires] = useState<Itineraire[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItineraire, setEditingItineraire] = useState<Itineraire | null>(null);
+
+    const { user } = useAuth();
+    const isAllowed = canEditOperation(user?.role);
 
     const columns: Column<Itineraire>[] = [
         { key: "code", label: "Code" },
@@ -83,22 +88,24 @@ export default function Destination() {
                     <p>Liste complète des itinéraires</p>
                 </div>
                 <div className="page-header-right">
-                    <Button
-                        label="Créer un itinéraire"
-                        icon={<FaPlus />}
-                        variant="info"
-                        onClick={() => {
-                            setEditingItineraire(null);
-                            setIsModalOpen(true);
-                        }}
-                    />
+                    {isAllowed && (
+                        <Button
+                            label="Créer un itinéraire"
+                            icon={<FaPlus />}
+                            variant="info"
+                            onClick={() => {
+                                setEditingItineraire(null);
+                                setIsModalOpen(true);
+                            }}
+                        />)}
                 </div>
             </div>
 
-                <Table
-                    columns={columns}
-                    data={itineraires}
-                    actions={(row: Itineraire) => (
+            <Table
+                columns={columns}
+                data={itineraires}
+                actions={(row: Itineraire) => (
+                    isAllowed ? (
                         <>
                             <ButtonTable
                                 icon={<FaEdit />}
@@ -112,9 +119,9 @@ export default function Destination() {
                                 onClick={() => handleDelete(row.id)}
                                 label="Supprimer"
                             />
-                        </>
-                    )}
-                />
+                        </>) : null
+                )}
+            />
 
             <Modal
                 isOpen={isModalOpen}

@@ -8,11 +8,16 @@ import "../styles/pages.css";
 import { airlineService } from "../services/AirlineService";
 import type { Airline } from "../types/airline";
 import { ButtonTable } from "../components/ButtonTable";
+import { useAuth } from "../auth/AuthContext";
+import { canEditOperation } from "../utils/permissions";
 
 export default function Airlines() {
     const [airlines, setAirlines] = useState<Airline[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingAirline, setEditingAirline] = useState<Airline | null>(null);
+
+    const { user } = useAuth();
+    const isAllowed = canEditOperation(user?.role);
 
     const columns: Column<Airline>[] = [
         { key: "code", label: "Code" },
@@ -83,22 +88,25 @@ export default function Airlines() {
                     <p>Liste complète des airlines</p>
                 </div>
                 <div className="page-header-right">
-                    <Button
-                        label="Créer une compagnie"
-                        icon={<FaPlus />}
-                        variant="info"
-                        onClick={() => {
-                            setEditingAirline(null);
-                            setIsModalOpen(true);
-                        }}
-                    />
+                    {isAllowed && (
+                        <Button
+                            label="Créer une compagnie"
+                            icon={<FaPlus />}
+                            variant="info"
+                            onClick={() => {
+                                setEditingAirline(null);
+                                setIsModalOpen(true);
+                            }}
+                        />)}
+
                 </div>
             </div>
 
-                <Table
-                    columns={columns}
-                    data={airlines}
-                    actions={(row: Airline) => (
+            <Table
+                columns={columns}
+                data={airlines}
+                actions={(row: Airline) => (
+                    isAllowed ? (
                         <>
                             <ButtonTable
                                 icon={<FaEdit />}
@@ -111,8 +119,9 @@ export default function Airlines() {
                                 onClick={() => handleDelete(row.id)}
                             />
                         </>
-                    )}
-                />
+                    ) : null
+                )}
+            />
 
             <Modal
                 isOpen={isModalOpen}

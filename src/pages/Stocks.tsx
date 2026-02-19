@@ -9,11 +9,16 @@ import "../styles/pages.css";
 import type { Stock, StockWithDetails } from "../types/stocks";
 import { stockService } from "../services/StockService";
 import { ButtonTable } from "../components/ButtonTable";
+import { useAuth } from "../auth/AuthContext";
+import { canEditOperation } from "../utils/permissions";
 
 export default function Stocks() {
     const [stocks, setStocks] = useState<StockWithDetails[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingStock, setEditingStock] = useState<StockWithDetails | null>(null);
+
+    const { user } = useAuth();
+    const isAllowed = canEditOperation(user?.role);
 
     const columns: Column<StockWithDetails>[] = [
         { key: "partner_name", label: "Partenaire" },
@@ -90,22 +95,24 @@ export default function Stocks() {
                     <p>Liste complète des stocks</p>
                 </div>
                 <div className="page-header-right">
-                    <Button
-                        label="Ajouter un stock"
-                        icon={<FaPlus />}
-                        variant="info"
-                        onClick={() => {
-                            setEditingStock(null);
-                            setIsModalOpen(true);
-                        }}
-                    />
+                    {isAllowed && (
+                        <Button
+                            label="Ajouter un stock"
+                            icon={<FaPlus />}
+                            variant="info"
+                            onClick={() => {
+                                setEditingStock(null);
+                                setIsModalOpen(true);
+                            }}
+                        />)}
                 </div>
             </div>
 
-                <Table
-                    columns={columns}
-                    data={stocks}
-                    actions={(row: StockWithDetails) => (
+            <Table
+                columns={columns}
+                data={stocks}
+                actions={(row: StockWithDetails) => (
+                    isAllowed ? (
                         <>
                             <ButtonTable
                                 icon={<FaEdit />}
@@ -119,9 +126,9 @@ export default function Stocks() {
                                 onClick={() => handleDelete(row.id)}
                                 label="Supprimer"
                             />
-                        </>
-                    )}
-                />
+                        </>) : null
+                )}
+            />
 
             <Modal
                 isOpen={isModalOpen}

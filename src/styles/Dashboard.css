@@ -1,61 +1,114 @@
+/* PAGE WRAPPER */
 .dashboard-page {
+    display: flex;
+    gap: 20px;
     width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: space-between;
-    gap: 18px;
+    height: 100vh;
+    /* toute la hauteur de la fenêtre */
+    box-sizing: border-box;
 }
 
+/* LEFT SECTION */
 .left-section {
-    width: 75%;
-    gap: 18px;
+    flex: 3;
     display: flex;
     flex-direction: column;
+    gap: 20px;
+    min-width: 300px;
 }
 
+/* CARDS */
+.card-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+/* LISTS */
+.list-section {
+    display: flex;
+    gap: 20px;
+    flex: 1;
+    /* occupe toute la hauteur restante sous les cards */
+    min-height: 0;
+    /* IMPORTANT pour que les enfants puissent scroller */
+}
+
+.list-left,
+.list-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    /* IMPORTANT pour que le scroll interne fonctionne */
+    max-height: 95%;
+    /* ne dépasse pas la section */
+}
+
+/* chaque ListSection prend tout l'espace */
+.list-left>div,
+.list-right>div {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    /* pour que list-body scroll si besoin */
+}
+
+/* LISTSECTION : scroll interne */
+.list-body {
+    overflow-y: auto;
+    flex: 1;
+    /* prend toute la hauteur disponible dans ListSection */
+}
+
+/* RIGHT SECTION */
 .right-section {
-    flex: 0 0 25%;
-    /* largeur fixe dans le flex parent */
-    max-width: 360px;
-    /* limite pour grands écrans */
-    min-width: 260px;
-    /* évite écrasement */
-
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 50px;
-
-    height: 100%;
-    overflow: hidden;
-    /* empêche débordement global */
+    gap: 20px;
 }
 
-/* chaque bloc interne prend sa place */
 .right-section>div {
     flex: 1;
-    min-height: 0;
+    display: flex;
+    flex-direction: column;
     /* IMPORTANT pour scroll interne */
 }
 
-.card-section {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 18px;
+.right-section .list-up {
+    display: flex;
+    gap: 20px;
+    flex: 1;
 }
 
-
-.list-section {
-    width: 100%;
-    height: 65%;
+.right-section .list-down {
+    display: flex;
+    flex: 2;
 }
 
-.list-up {
-    width: 100%;
-    height: 100%;
-}
+/* RESPONSIVE TABLETTE / MOBILE */
+@media (max-width: 1024px) {
+    .dashboard-page {
+        flex-direction: column;
+        height: auto;
+    }
 
-.list-down {
-    width: 100%;
-    height: 100%;
+    .right-section {
+        max-width: 100%;
+        min-width: 100%;
+    }
+
+    .list-section {
+        flex-direction: column;
+        gap: 20px;
+        height: auto;
+    }
+
+    .list-left,
+    .list-right {
+        height: 250px;
+        /* fixe temporaire sur mobile */
+    }
 }

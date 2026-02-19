@@ -9,11 +9,16 @@ import { cashFlowService } from "../services/CashFlowService";
 import type { CashFlow, CashFlowWithDetails } from "../types/cash_flow";
 import { ButtonTable } from "../components/ButtonTable";
 import "../styles/pages.css";
+import { useAuth } from "../auth/AuthContext";
+import { canEditOperation } from "../utils/permissions";
 
 export default function CashFlowPage() {
     const [cashFlows, setCashFlows] = useState<CashFlowWithDetails[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCashFlow, setEditingCashFlow] = useState<CashFlow | null>(null);
+
+    const { user } = useAuth();
+    const isAllowed = canEditOperation(user?.role);
 
     // Colonnes du tableau
     const columns: Column<CashFlowWithDetails>[] = [
@@ -91,36 +96,37 @@ export default function CashFlowPage() {
                     <p>Liste complète des mouvements de caisse</p>
                 </div>
                 <div className="page-header-right">
-                    <Button
-                        label="Ajouter un flux"
-                        icon={<FaPlus />}
-                        variant="info"
-                        onClick={() => {
-                            setEditingCashFlow(null);
-                            setIsModalOpen(true);
-                        }}
-                    />
+                    {isAllowed && (
+                        <Button
+                            label="Ajouter un flux"
+                            icon={<FaPlus />}
+                            variant="info"
+                            onClick={() => {
+                                setEditingCashFlow(null);
+                                setIsModalOpen(true);
+                            }}
+                        />)}
                 </div>
             </div>
 
-                <Table
-                    columns={columns}
-                    data={cashFlows}
-                    actions={(row: CashFlowWithDetails) => (
-                        <>
-                            <ButtonTable
-                                icon={<FaEdit />}
-                                variant="secondary"
-                                onClick={() => handleEdit(row)}
-                            />
-                            <ButtonTable
-                                icon={<FaTrash />}
-                                variant="danger"
-                                onClick={() => handleDelete(row.id)}
-                            />
-                        </>
-                    )}
-                />
+            <Table
+                columns={columns}
+                data={cashFlows}
+                actions={(row: CashFlowWithDetails) => (
+                    <>
+                        <ButtonTable
+                            icon={<FaEdit />}
+                            variant="secondary"
+                            onClick={() => handleEdit(row)}
+                        />
+                        <ButtonTable
+                            icon={<FaTrash />}
+                            variant="danger"
+                            onClick={() => handleDelete(row.id)}
+                        />
+                    </>
+                )}
+            />
 
             <Modal
                 isOpen={isModalOpen}

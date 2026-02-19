@@ -30,9 +30,9 @@ export default function OperationForm({ initialData, onSubmit, onCancel }: Props
         client_name: initialData?.client_name ?? "",
         date_demande: initialData?.date_demande ?? "",
         date_emission: initialData?.date_emission ?? "",
-        total_amount: initialData?.total_amount ?? 0,
-        total_commission: initialData?.total_commission ?? 0,
-        total_tax: initialData?.total_tax ?? 0,
+        total_amount: initialData?.total_amount,
+        total_commission: initialData?.total_commission,
+        total_tax: initialData?.total_tax,
         receipt_reference: initialData?.receipt_reference ?? "",
         observation: initialData?.observation ?? ""
     });
@@ -126,13 +126,15 @@ export default function OperationForm({ initialData, onSubmit, onCancel }: Props
     /* ========================= */
     /* HANDLE CHANGE             */
     /* ========================= */
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    ) => {
         const { name, value } = e.target;
 
         setFormData(prev => ({
             ...prev,
             [name]: ["total_amount", "total_commission", "total_tax"].includes(name)
-                ? Number(value)
+                ? Number(value.replace(",", "."))
                 : value
         }));
     };
@@ -242,8 +244,9 @@ export default function OperationForm({ initialData, onSubmit, onCancel }: Props
                     <input
                         type="number"
                         name="total_commission"
-                        value={formData.total_commission ?? 0}
+                        value={formData.total_commission}
                         onChange={handleChange}
+                        required
                     />
                 </div>
 
@@ -253,8 +256,9 @@ export default function OperationForm({ initialData, onSubmit, onCancel }: Props
                     <input
                         type="number"
                         name="total_tax"
-                        value={formData.total_tax ?? 0}
+                        value={formData.total_tax}
                         onChange={handleChange}
+                        required
                     />
                 </div>
 
@@ -286,4 +290,4 @@ export default function OperationForm({ initialData, onSubmit, onCancel }: Props
             </div>
         </form>
     );
-        }
+}

@@ -1,3 +1,5 @@
+/* src/components/Alert.tsx */
+
 
 type AlertType = 'success' | 'error' | 'warning' | 'info';
 

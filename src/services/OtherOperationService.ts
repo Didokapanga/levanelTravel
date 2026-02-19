@@ -36,6 +36,33 @@ export class OtherOperationService {
         return otherOperationsRepo.softDelete(id);
     }
 
+    async getValidatedToday(): Promise<OrtherOperationWithDetails[]> {
+
+        const today = new Date().toISOString().slice(0, 10);
+
+        const ops = await this.getAllWithDetails();
+
+        return ops.filter(op =>
+            op.status === "validated" &&
+            op.date_demande?.slice(0, 10) === today
+        );
+    }
+
+    async getTotalServiceFeeValidatedToday(): Promise<number> {
+
+        const today = new Date().toISOString().slice(0, 10);
+
+        const ops = await otherOperationsRepo.getAll();
+
+        return ops
+            .filter(op =>
+                op.status === "validated" &&
+                op.date_demande?.slice(0, 10) === today
+            )
+            .reduce((sum, op) => sum + Number(op.service_fee ?? 0), 0);
+    }
+
+
     /* ========================= */
     /* ENRICHISSEMENT            */
     /* ========================= */

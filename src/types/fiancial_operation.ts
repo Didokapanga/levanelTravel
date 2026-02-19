@@ -15,4 +15,5 @@ export interface FinancialOperation extends BaseEntity {
 export interface FinancialOperationWithDetails extends FinancialOperation {
     partner_name?: string;
     contract_type?: string;
+    receipt_reference?: string;
 }

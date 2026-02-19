@@ -7,11 +7,16 @@ import UserForm from "../components/forms/UserForm";
 import { userService } from "../services/UserService";
 import type { User } from "../types/users";
 import "../styles/pages.css";
+import { useAuth } from "../auth/AuthContext";
+import { canManagerOperation } from "../utils/permissions";
 
 export default function Users() {
 
     const [users, setUsers] = useState<User[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const { user } = useAuth();
+    const isAllowed = canManagerOperation(user?.role);
 
     const columns: Column<User>[] = [
         { key: "username", label: "Nom" },
@@ -75,12 +80,13 @@ export default function Users() {
                 </div>
 
                 <div className="page-header-right">
-                    <Button
-                        label="Créer un utilisateur"
-                        icon={<FaPlus />}
-                        variant="info"
-                        onClick={() => setIsModalOpen(true)}
-                    />
+                    {isAllowed && (
+                        <Button
+                            label="Créer un utilisateur"
+                            icon={<FaPlus />}
+                            variant="info"
+                            onClick={() => setIsModalOpen(true)}
+                        />)}
                 </div>
             </div>
 
