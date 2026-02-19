@@ -25,6 +25,14 @@ class OperationSegmentsService {
         return operationSegmentsRepo.findByOperation(operation_id);
     }
 
+    async getEnrichedByOperation(operation_id: string): Promise<OperationSegmentWithDetails[]> {
+        // Récupère tous les segments enrichis
+        const allSegments = await this.getAllWithDetails();
+
+        // Filtre uniquement ceux de l'opération demandée
+        return allSegments.filter(s => s.operation_id === operation_id);
+    }
+
     update(id: string, data: Partial<OperationSegments>) {
         return operationSegmentsRepo.update(id, data);
     }

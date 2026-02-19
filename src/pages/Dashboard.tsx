@@ -31,7 +31,8 @@ export default function Dashboard() {
 
     async function loadData() {
         const today = await operationService.getValidatedToday();
-        const fees = await operationService.getTotalServiceFees();
+        // const fees = await operationService.getTotalServiceFees();
+        const fees = await operationService.getValidatedCommissionToday();
         const cancelledToday = await operationService.getCancelledToday();
         const opsToday = await operationService.getValidatedTodayWithDetails();
         const otherToday = await otherOperationService.getValidatedToday();

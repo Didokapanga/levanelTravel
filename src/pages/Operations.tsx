@@ -7,7 +7,7 @@ import { Modal } from "../components/Modal";
 
 import OperationForm from "../components/forms/OperationForm";
 
-import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
+import { FaPlus, FaEdit, FaTrash, FaFileAlt, FaFileInvoice } from "react-icons/fa";
 
 import "../styles/pages.css";
 
@@ -19,6 +19,7 @@ import { otherOperationService } from "../services/OtherOperationService";
 import OtherOperationForm from "../components/forms/OtherOperationForm";
 import { useAuth } from "../auth/AuthContext";
 import { canEditOperation } from "../utils/permissions";
+import { invoiceService } from "../services/InvoiceService";
 
 
 export default function OperationsPage() {
@@ -118,6 +119,7 @@ export default function OperationsPage() {
     /* ========================= */
 
     const columns: Column<OperationWithDetails>[] = [
+        { key: "receipt_reference", label: "Référence reçu" },
         { key: "partner_name", label: "Partenaire" },
         { key: "service_name", label: "Service" },
         { key: "client_name", label: "Client" },
@@ -230,20 +232,36 @@ export default function OperationsPage() {
                         columns={columns}
                         data={operations}
                         actions={(row: OperationWithDetails) => (
-                            isAllowed ? (
-                                <>
-                                    <ButtonTable
-                                        icon={<FaEdit />}
-                                        variant="secondary"
-                                        onClick={() => handleEdit(row)}
-                                    />
-                                    <ButtonTable
-                                        icon={<FaTrash />}
-                                        variant="danger"
-                                        onClick={() => handleDelete(row.id)}
-                                    />
-                                </>
-                            ) : null
+                            <>
+                                {isAllowed && (
+                                    <>
+                                        <ButtonTable
+                                            icon={<FaEdit />}
+                                            variant="secondary"
+                                            onClick={() => handleEdit(row)}
+                                        />
+                                        <ButtonTable
+                                            icon={<FaTrash />}
+                                            variant="danger"
+                                            onClick={() => handleDelete(row.id)}
+                                        />
+                                    </>
+                                )}
+
+                                {/* 🔹 Pro-forma */}
+                                <ButtonTable
+                                    icon={<FaFileAlt />}
+                                    variant="info"
+                                    onClick={() => invoiceService.generateProforma(row)}
+                                />
+
+                                {/* 🔹 Facture archive */}
+                                <ButtonTable
+                                    icon={<FaFileInvoice />}
+                                    variant="secondary"
+                                    onClick={() => invoiceService.generateArchive(row)}
+                                />
+                            </>
                         )}
                     />
 
@@ -325,7 +343,10 @@ export default function OperationsPage() {
             {/* RAPPORT                 */}
             {/* ======================= */}
             {activeTab === "rapport" && (
-                <div>Contenu Rapport…</div>
+                <div>
+                    <h1>Contenu Rapport</h1>
+                    <p>Le module est en maintenance</p>
+                </div>
             )}
 
         </div>

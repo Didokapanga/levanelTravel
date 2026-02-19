@@ -138,7 +138,7 @@ export class OperationService {
 
         return ops.filter(o =>
             o.status === "validated" &&
-            o.date_emission.startsWith(today)
+            o.date_demande.startsWith(today)
         );
     }
 
@@ -162,6 +162,19 @@ export class OperationService {
         );
     }
 
+    async getValidatedCommissionToday(): Promise<number> {
+        const today = new Date().toISOString().slice(0, 10);
+        const ops = await this.getAllWithDetails();
+
+        return ops
+            .filter(o =>
+                o.status === "validated" &&
+                o.date_demande.startsWith(today) &&
+                o.contract_type !== "agency_service"
+            )
+            .reduce((sum, o) => sum + (o.total_commission ?? 0), 0);
+    }
+
     async getValidatedTodayWithDetails(): Promise<OperationWithDetails[]> {
 
         const today = new Date().toISOString().slice(0, 10);
@@ -170,7 +183,7 @@ export class OperationService {
 
         return ops.filter(o =>
             o.status === "validated" &&
-            o.date_emission.startsWith(today)
+            o.date_demande.startsWith(today)
         );
     }
 
@@ -180,7 +193,7 @@ export class OperationService {
 
         return ops.filter(o =>
             o.status === "cancelled" &&
-            o.date_emission?.startsWith(today)
+            o.date_demande?.startsWith(today)
         );
     }
 

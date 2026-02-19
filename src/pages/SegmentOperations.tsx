@@ -79,6 +79,8 @@ export default function SegmentOperations() {
         { key: "tht", label: "THT" },
         { key: "tax", label: "Tax" },
         { key: "commission", label: "Commission" },
+        { key: "service_fee", label: "Frais services" },
+        { key: "related_costs", label: "Frais connexe" },
         { key: "remaining_amount", label: "Reste" },
         { key: "sold_debit", label: "Débit compte" },
         { key: "operation_date", label: "Date opération" },

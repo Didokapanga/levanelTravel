@@ -9,6 +9,7 @@ export interface OperationSegments extends BaseEntity {
     pnr?: string;
     tht?: number;
     tax?: number;
+    related_costs?: number;
     service_fee?: number;
     commission?: number;
     sold_debit?: number;
