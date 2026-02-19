@@ -9,7 +9,7 @@ import type { User } from "../types/users";
 import "../styles/pages.css";
 
 export default function Profile() {
-    const { user: authUser, login } = useAuth();
+    const { user: authUser } = useAuth();
     const [user, setUser] = useState<User | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [alert, setAlert] = useState<{ message: string; type: "success" | "error" | "info" | "warning" } | null>(null);
