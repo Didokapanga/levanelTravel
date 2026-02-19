@@ -75,11 +75,11 @@
     background: #4caf50;
 }
 
-.activity-badge.warning {
+.activity-badge.Modifier {
     background: #ff9800;
 }
 
-.activity-badge.danger {
+.activity-badge.Annuler {
     background: #f44336;
 }
 
