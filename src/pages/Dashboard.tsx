@@ -131,7 +131,7 @@ export default function Dashboard() {
 
                 <div className="list-down">
                     <ActivityList
-                        title="Annulation et Modification"
+                        title="Annulation et Modification avec pénalité"
                         items={updatesOrCancellations.map((op) => ({
                             id: op.id!,
                             title: op.receipt_reference ?? "Réf inconnue",
