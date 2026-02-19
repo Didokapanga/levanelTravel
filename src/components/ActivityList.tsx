@@ -5,7 +5,7 @@ interface ActivityItem {
     title: string;
     description?: string;
     value?: string | number;
-    badge?: "success" | "warning" | "danger" | "info";
+    badge?: "success" | "Modifier" | "Annuler" | "info";
 }
 
 interface Props {
