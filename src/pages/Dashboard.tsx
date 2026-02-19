@@ -140,7 +140,7 @@ export default function Dashboard() {
                                 ? op.update_price.toLocaleString()
                                 : op.cancel_price?.toLocaleString() ?? 0
                                 } $`,
-                            badge: op.cancel_price && op.cancel_price > 0 ? "Modifier" : "Annuler"
+                            badge: op.cancel_price && op.cancel_price > 0 ? "Annuler" : "Modifier"
                         }))}
                     />
                 </div>
