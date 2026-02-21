@@ -61,7 +61,7 @@ export class AppDatabase extends Dexie {
   constructor() {
     super('app_database');
 
-    this.version(5).stores({
+    this.version(6).stores({
       users: `&id,&username,email,role,password,is_active,sync_status,is_deleted,updated_at`,
       systems: `&id,name,sync_status,is_deleted`,
       airlines: `&id,code,name,sync_status,is_deleted,updated_at`,
@@ -73,7 +73,7 @@ export class AppDatabase extends Dexie {
       stocks: `&id,contract_id,sync_status,is_deleted,updated_at`,
       financial_operations: `&id,operation_id,contract_id,source,type,sync_status,is_deleted,created_at`,
       cash_flows: `&id,direction,source,currency,contract_id,partner_id,operation_date,sync_status,is_deleted`,
-      operations: `&id,partner_id,service_id,contract_id,date_emission,total_amount,total_commission,total_tax,status,receipt_reference,sync_status,is_deleted,updated_at`,
+      operations: `&id,partner_id,service_id,contract_id,date_emission,total_amount,total_commission,total_tax,status,&receipt_reference,sync_status,is_deleted,updated_at`,
       orther_operations: `&id,service_id,client_name,date_demande,date_emission,total_amount,service_fee,status,observation,sync_status,is_deleted,updated_at`,
       operation_segments: `&id,operation_id,airline_id,system_id,itineraire_id,ticket_number,pnr,sync_status,is_deleted,updated_at`,
       audit_logs: `&id,entity_name,entity_id,action,user_id,timestamp,sync_status`,

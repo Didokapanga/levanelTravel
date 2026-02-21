@@ -101,8 +101,20 @@ export default function OperationForm({ initialData, onSubmit, onCancel }: Props
         const generateReceiptReference = async (dateStr: string) => {
             try {
                 const existingOps = await operationService.getByDate(dateStr);
-                const nextNumber = existingOps.length + 1;
+
+                // 🔹 Extraire les numéros existants
+                const numbers = existingOps
+                    .map(op => {
+                        const parts = op.receipt_reference?.split("-");
+                        return parts?.length === 4 ? parseInt(parts[3], 10) : 0;
+                    })
+                    .filter(n => !isNaN(n));
+
+                const maxNumber = numbers.length > 0 ? Math.max(...numbers) : 0;
+
+                const nextNumber = maxNumber + 1;
                 const numberStr = String(nextNumber).padStart(4, "0");
+
                 return `${dateStr}-${numberStr}`;
             } catch (err) {
                 console.error("Erreur génération référence reçu :", err);
