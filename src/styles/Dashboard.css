@@ -3,9 +3,10 @@
     display: flex;
     gap: 20px;
     width: 100%;
-    height: 100vh;
+    height: 90vh;
     /* toute la hauteur de la fenêtre */
     box-sizing: border-box;
+    padding-bottom: 35px;
 }
 
 /* LEFT SECTION */
@@ -30,7 +31,6 @@
     gap: 20px;
     flex: 1;
     /* occupe toute la hauteur restante sous les cards */
-    min-height: 0;
     /* IMPORTANT pour que les enfants puissent scroller */
 }
 
@@ -41,7 +41,6 @@
     flex-direction: column;
     min-height: 0;
     /* IMPORTANT pour que le scroll interne fonctionne */
-    max-height: 95%;
     /* ne dépasse pas la section */
 }
 
@@ -51,7 +50,6 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: 0;
     /* pour que list-body scroll si besoin */
 }
 
@@ -68,6 +66,7 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+    max-height: auto;
 }
 
 .right-section>div {
