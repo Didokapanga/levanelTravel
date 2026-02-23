@@ -63,6 +63,7 @@ export class InvoiceService {
 
         const airlineName = segments.map(s => s.airline_name).filter(Boolean).join(", ");
         const itineraireCode = segments.map(s => s.itineraire_code).filter(Boolean).join(", ");
+        // const itineraireCode = segments.map(s => s.itineraire_country).filter(Boolean).join(", ");
 
         const tht = segments.reduce((sum, s) => sum + (s.tht ?? 0), 0);
         const tax = segments.reduce((sum, s) => sum + (s.tax ?? 0), 0);

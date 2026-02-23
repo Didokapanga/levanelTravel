@@ -1,0 +1,167 @@
+/* ----------------------- */
+/* Container général       */
+/* ----------------------- */
+.views-container {
+    width: 100%;
+    max-width: 1100px;
+    margin: auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+
+/* ----------------------- */
+/* Header                  */
+/* ----------------------- */
+.views-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.views-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.views-ref {
+    color: #888;
+    font-size: 14px;
+}
+
+.views-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* ----------------------- */
+/* Grille principale       */
+/* ----------------------- */
+.views-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+/* ----------------------- */
+/* Cartes                  */
+/* ----------------------- */
+.views-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* ----------------------- */
+/* Items opération         */
+/* ----------------------- */
+.views-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 4px 0;
+}
+
+.views-item span {
+    color: #555;
+}
+
+.views-item b {
+    text-align: right;
+}
+
+/* ----------------------- */
+/* Totaux                  */
+/* ----------------------- */
+.views-total {
+    background: #e6f2ff;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 15px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.views-total div span {
+    color: #555;
+}
+
+.views-total div b {
+    text-align: right;
+}
+
+/* ----------------------- */
+/* Observation             */
+/* ----------------------- */
+.views-observation {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 6px;
+    margin-top: 15px;
+}
+
+/* ----------------------- */
+/* Segments                */
+/* ----------------------- */
+.segment-card {
+    background: #fafafa;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-left: 4px solid #1e90ff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.segment-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.segment-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.segment-grid div span {
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.segment-grid div b {
+    text-align: right;
+    font-size: 0.95rem;
+}
+
+/* Message “aucun segment” */
+.views-empty {
+    color: #999;
+    font-style: italic;
+}
+
+/* ----------------------- */
+/* Scroll segments          */
+/* ----------------------- */
+.views-grid>.views-card:nth-child(2) {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+/* ----------------------- */
+/* Responsive              */
+/* ----------------------- */
+@media (max-width: 768px) {
+    .views-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .views-total {
+        grid-template-columns: 1fr;
+    }
+}

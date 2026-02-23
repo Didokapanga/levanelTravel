@@ -25,6 +25,7 @@ export interface OperationSegmentWithDetails extends OperationSegments {
     airline_name?: string;
     system_name?: string;
     itineraire_code?: string;
+    itineraire_country?: string;
 
     operation_client?: string;
     operation_date?: string;

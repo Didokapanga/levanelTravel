@@ -71,47 +71,52 @@ export class OperationWorkflowService {
             throw new Error("Aucun segment trouvé pour cette opération");
         }
 
-        // 3️⃣ Déductions selon le type de contrat
+        // --------------------------------------------------
+        // 3️⃣ Vérifier que tout le montant à déduire est disponible
+        // --------------------------------------------------
         for (const seg of segmentsToUse) {
-
             const valueToDeduct = seg.sold_debit ?? 0;
-
             if (valueToDeduct <= 0) continue;
 
-            try {
-
-                if (contractType === "caution_and_stock") {
-                    await stockService.deductStock(
-                        operation.contract_id,
-                        valueToDeduct
-                    );
+            if (contractType === "caution_and_stock") {
+                const totalAvailable = (await stockService.getByContractWithDetails(operation.contract_id))
+                    .reduce((sum, s) => sum + (s.amount_remaining ?? 0), 0);
+                if (totalAvailable < valueToDeduct) {
+                    throw new Error(`Stock insuffisant pour le contrat. Il manque ${valueToDeduct - totalAvailable}.`);
                 }
-
-                else if (contractType === "caution_only") {
-                    await cautionService.deductCaution(
-                        operation.contract_id,
-                        valueToDeduct
-                    );
+            } else if (contractType === "caution_only") {
+                const totalAvailable = (await cautionService.getByContractWithDetails(operation.contract_id))
+                    .reduce((sum, c) => sum + (c.amount_remaining ?? 0), 0);
+                if (totalAvailable < valueToDeduct) {
+                    throw new Error(`Caution insuffisante pour le contrat. Il manque ${valueToDeduct - totalAvailable}.`);
                 }
+            }
+            // agency_service → aucune vérification
+        }
 
-                // agency_service → aucune déduction
+        // --------------------------------------------------
+        // 4️⃣ Appliquer les déductions et mettre à jour les segments
+        // --------------------------------------------------
+        for (const seg of segmentsToUse) {
+            const valueToDeduct = seg.sold_debit ?? 0;
+            if (valueToDeduct <= 0) continue;
 
-            } catch (err: any) {
-                throw new Error(
-                    `Impossible de valider l'opération : ${err.message}`
-                );
+            if (contractType === "caution_and_stock") {
+                await stockService.deductStock(operation.contract_id, valueToDeduct);
+            } else if (contractType === "caution_only") {
+                await cautionService.deductCaution(operation.contract_id, valueToDeduct);
             }
 
-            // 4️⃣ Marquer le segment pour synchronisation
             seg.sync_status = "dirty";
             seg.version = (seg.version ?? 0) + 1;
             seg.updated_at = now;
 
-            // 5️⃣ Sauvegarder le segment
             await operationSegmentsService.update(seg.id, seg);
         }
 
-        // 6️⃣ Marquer l'opération comme validée
+        // --------------------------------------------------
+        // 5️⃣ Marquer l'opération comme validée
+        // --------------------------------------------------
         await operationService.update(operation.id, {
             status: "validated",
             sync_status: "dirty",
@@ -119,19 +124,17 @@ export class OperationWorkflowService {
             updated_at: now
         });
 
-        // 7️⃣ Créer l'opération financière pour la Billetterie
+        // --------------------------------------------------
+        // 6️⃣ Créer l'opération financière pour la Billetterie
+        // --------------------------------------------------
         if (contractType !== "agency_service") {
-
             await financialOperationService.create({
                 operation_id: operation.id,
                 contract_id: operation.contract_id,
-                source: contractType === "caution_only"
-                    ? "caution"
-                    : "stock",
+                source: contractType === "caution_only" ? "caution" : "stock",
                 type: "deduction",
                 amount: operation.total_amount,
-                description:
-                    `Déduction ${contractType} pour l'opération client ${operation.client_name}`,
+                description: `Déduction ${contractType} pour l'opération client ${operation.client_name}`,
                 sync_status: "dirty"
             });
         }
