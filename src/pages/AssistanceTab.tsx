@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "../components/Button";
 import { ButtonTable } from "../components/ButtonTable";
 import { Table, type Column } from "../components/Table";
@@ -22,8 +22,37 @@ export default function AssistanceTab() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingAssist, setEditingAssist] = useState<OrtherOperations | null>(null);
 
+    // 🔹 FILTRE DATE
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+
     const { user } = useAuth();
     const isAllowed = canEditOperation(user?.role);
+
+    // 🔹 FILTRAGE
+    const filteredAssistances = useMemo(() => {
+
+        return assistances.filter(a => {
+
+            if (!a.date_demande) return false;
+
+            const d = new Date(a.date_demande);
+
+            if (startDate) {
+                const start = new Date(startDate);
+                if (d < start) return false;
+            }
+
+            if (endDate) {
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
+                if (d > end) return false;
+            }
+
+            return true;
+        });
+
+    }, [assistances, startDate, endDate]);
 
     const columns: Column<OrtherOperations>[] = [
         { key: "client_name", label: "Client" },
@@ -36,7 +65,8 @@ export default function AssistanceTab() {
 
     return (
         <>
-            <div style={{ marginBottom: 15 }}>
+            {/* 🔹 HEADER + FILTRE */}
+            <div style={{ marginBottom: 15, display: "flex", justifyContent: "space-between" }}>
                 {isAllowed && (
                     <Button
                         label="Nouvelle assistance"
@@ -48,11 +78,33 @@ export default function AssistanceTab() {
                         }}
                     />
                 )}
+
+                <div style={{ display: "flex", gap: 10 }}>
+                    <input
+                        type="date"
+                        value={startDate}
+                        onChange={e => setStartDate(e.target.value)}
+                    />
+                    <input
+                        type="date"
+                        value={endDate}
+                        onChange={e => setEndDate(e.target.value)}
+                    />
+                    <Button
+                        label="Reset"
+                        variant="secondary"
+                        onClick={() => {
+                            setStartDate("");
+                            setEndDate("");
+                        }}
+                    />
+                </div>
             </div>
 
+            {/* 🔹 TABLE */}
             <Table
                 columns={columns}
-                data={assistances}
+                data={filteredAssistances}
                 actions={(row) => (
                     isAllowed && (
                         <>
@@ -74,6 +126,7 @@ export default function AssistanceTab() {
                 )}
             />
 
+            {/* 🔹 MODAL */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
