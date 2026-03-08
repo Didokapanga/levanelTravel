@@ -20,7 +20,7 @@ export interface OperationSegments extends BaseEntity {
     commission?: number;
     sold_debit?: number;
     amount_received?: number;
-    // remaining_amount?: number;
+    remaining_amount?: number;
     update_price?: number;
     cancel_price?: number;
 }
