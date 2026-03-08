@@ -35,4 +35,6 @@ export interface OperationSegmentWithDetails extends OperationSegments {
 
     operation_client?: string;
     operation_date?: string;
+
+
 }

@@ -14,7 +14,7 @@ import { canEditOperation } from "../utils/permissions";
 
 import { useOperations } from "../hooks/useOperations";
 
-import type { Operations, OperationWithDetails } from "../types/operations";
+import type { OperationWithDetails } from "../types/operations";
 
 export default function BilletterieTab() {
 
@@ -29,7 +29,9 @@ export default function BilletterieTab() {
     } = useOperations();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingOperation, setEditingOperation] = useState<Operations | null>(null);
+    const [editingOperation, setEditingOperation] =
+        useState<OperationWithDetails | null>(null);
+    // const [editingOperation, setEditingOperation] = useState<Operations | null>(null);
 
     // 🔹 FILTRE DATE
     const [startDate, setStartDate] = useState("");
