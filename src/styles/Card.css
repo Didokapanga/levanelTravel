@@ -4,7 +4,7 @@
 /* Container général de la page  */
 /* ============================= */
 .page-container {
-    padding: 20px;
+    padding: 19px;
     background-color: #f7f7f7;
     min-height: 100vh;
 }
