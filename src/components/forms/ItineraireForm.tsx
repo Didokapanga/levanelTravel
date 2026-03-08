@@ -39,7 +39,7 @@ export default function ItineraireForm({ onSubmit, onCancel, initialData }: Itin
                 </div>
 
                 <div className="form-field">
-                    <label>Pays</label>
+                    <label>Ville</label>
                     <input
                         type="text"
                         name="country"

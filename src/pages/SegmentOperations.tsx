@@ -22,6 +22,8 @@ export default function SegmentOperations() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSegment, setEditingSegment] = useState<OperationSegments | null>(null);
 
+    const [segmentType, setSegmentType] = useState<"sale" | "change" | "canceled">("sale");
+
     const { user } = useAuth();
     const isAllowed = canEditOperation(user?.role);
 
@@ -44,10 +46,15 @@ export default function SegmentOperations() {
 
     const handleSubmit = async (data: Partial<OperationSegments>) => {
 
+        const payload = {
+            ...data,
+            operation_type: segmentType
+        };
+
         if (editingSegment) {
-            await operationSegmentsService.update(editingSegment.id, data);
+            await operationSegmentsService.update(editingSegment.id, payload);
         } else {
-            await operationSegmentsService.create(data);
+            await operationSegmentsService.create(payload);
         }
 
         setEditingSegment(null);
@@ -76,12 +83,13 @@ export default function SegmentOperations() {
         { key: "airline_name", label: "Airline" },
         { key: "system_name", label: "System" },
         { key: "itineraire_code", label: "Itinéraire" },
+        { key: "operation_type", label: "Sale or change" },
         { key: "tht", label: "THT" },
         { key: "tax", label: "Tax" },
         { key: "commission", label: "Commission" },
         { key: "service_fee", label: "Frais services" },
         { key: "related_costs", label: "Frais connexe" },
-        { key: "remaining_amount", label: "Reste" },
+        { key: "amount_received", label: "TTC" },
         { key: "sold_debit", label: "Débit compte" },
         { key: "operation_date", label: "Date opération" },
         {
@@ -124,15 +132,51 @@ export default function SegmentOperations() {
                 {/* ===== Bouton ===== */}
                 <div style={{ marginBottom: 15 }}>
                     {isAllowed && (
-                        <Button
-                            label="Nouveau segment"
-                            icon={<FaPlus />}
-                            variant="info"
-                            onClick={() => {
-                                setEditingSegment(null);
-                                setIsModalOpen(true);
-                            }}
-                        />
+                        <div style={{ display: "flex", gap: 10 }}>
+
+                            <Button
+                                label="Nouveau billet"
+                                icon={<FaPlus />}
+                                variant="info"
+                                onClick={() => {
+                                    setSegmentType("sale");
+                                    setEditingSegment(null);
+                                    setIsModalOpen(true);
+                                }}
+                            />
+
+                            <Button
+                                label="Modification"
+                                icon={<FaPlus />}
+                                variant="secondary"
+                                onClick={() => {
+                                    setSegmentType("change");
+                                    setEditingSegment(null);
+                                    setIsModalOpen(true);
+                                }}
+                            />
+
+                            <Button
+                                label="Annulation"
+                                icon={<FaPlus />}
+                                variant="danger"
+                                onClick={() => {
+                                    setSegmentType("canceled");
+                                    setEditingSegment(null);
+                                    setIsModalOpen(true);
+                                }}
+                            />
+
+                        </div>
+                        // <Button
+                        //     label="Nouveau segment"
+                        //     icon={<FaPlus />}
+                        //     variant="info"
+                        //     onClick={() => {
+                        //         setEditingSegment(null);
+                        //         setIsModalOpen(true);
+                        //     }}
+                        // />
                     )}
                 </div>
             </div>

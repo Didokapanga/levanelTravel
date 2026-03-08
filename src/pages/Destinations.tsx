@@ -21,7 +21,7 @@ export default function Destination() {
 
     const columns: Column<Itineraire>[] = [
         { key: "code", label: "Code" },
-        { key: "country", label: "Pays" },
+        { key: "country", label: "Ville" },
         {
             key: 'sync_status',
             label: 'Statut sync',

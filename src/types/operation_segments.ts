@@ -1,5 +1,10 @@
 import type { BaseEntity } from './base';
 
+export type OperationType =
+    | 'sale'
+    | 'change'
+    | 'canceled';
+
 export interface OperationSegments extends BaseEntity {
     operation_id: string;
     airline_id?: string;
@@ -9,12 +14,13 @@ export interface OperationSegments extends BaseEntity {
     pnr?: string;
     tht?: number;
     tax?: number;
+    operation_type: OperationType;
     related_costs?: number;
     service_fee?: number;
     commission?: number;
     sold_debit?: number;
     amount_received?: number;
-    remaining_amount?: number;
+    // remaining_amount?: number;
     update_price?: number;
     cancel_price?: number;
 }

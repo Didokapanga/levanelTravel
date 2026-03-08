@@ -5,8 +5,19 @@ import "../styles/pages.css";
 import { financialOperationService } from "../services/FinancialOperationService";
 import type { FinancialOperationWithDetails } from "../types/fiancial_operation";
 
+import { FaEdit, FaTrash } from "react-icons/fa";
+import { ButtonTable } from "../components/ButtonTable";
+import { useAuth } from "../auth/AuthContext";
+import { canEditOperation } from "../utils/permissions";
+import { Modal } from "../components/Modal";
+import FinancialOperationForm from "../components/forms/FinancialOperationForm";
+
 export default function FinancialOperationsPage() {
     const [operations, setOperations] = useState<FinancialOperationWithDetails[]>([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingOperation, setEditingOperation] = useState<FinancialOperationWithDetails | null>(null);
+    const { user } = useAuth();
+    const isAllowed = canEditOperation(user?.role);
 
     // Colonnes du tableau
     const columns: Column<FinancialOperationWithDetails>[] = [
@@ -46,9 +57,33 @@ export default function FinancialOperationsPage() {
         { key: "description", label: "Description" },
     ];
 
+    const handleUpdateOperation = async (data: Partial<FinancialOperationWithDetails>) => {
+
+        if (!editingOperation) return;
+
+        const updated = await financialOperationService.update(editingOperation.id, data);
+
+        setOperations(prev =>
+            prev.map(op => op.id === updated?.id ? { ...op, ...updated } : op)
+        );
+
+        setEditingOperation(null);
+        setIsModalOpen(false);
+    };
+
     const loadOperations = async () => {
         const all = await financialOperationService.getAllWithDetails();
         setOperations(all);
+    };
+
+    const handleEdit = (operation: FinancialOperationWithDetails) => {
+        setEditingOperation(operation);
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = async (id: string) => {
+        await financialOperationService.delete(id);
+        setOperations(prev => prev.filter(op => op.id !== id));
     };
 
     useEffect(() => {
@@ -67,7 +102,41 @@ export default function FinancialOperationsPage() {
             <Table
                 columns={columns}
                 data={operations}
+                actions={(row: FinancialOperationWithDetails) =>
+                    isAllowed && (
+                        <>
+                            <ButtonTable
+                                icon={<FaEdit />}
+                                variant="secondary"
+                                onClick={() => handleEdit(row)}
+                            />
+                            <ButtonTable
+                                icon={<FaTrash />}
+                                variant="danger"
+                                onClick={() => handleDelete(row.id)}
+                            />
+                        </>
+                    )
+                }
             />
+
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setEditingOperation(null);
+                    setIsModalOpen(false);
+                }}
+                title="Modifier opération financière"
+            >
+                <FinancialOperationForm
+                    initialData={editingOperation ?? undefined}
+                    onSubmit={handleUpdateOperation}
+                    onCancel={() => {
+                        setEditingOperation(null);
+                        setIsModalOpen(false);
+                    }}
+                />
+            </Modal>
         </div>
     );
 }

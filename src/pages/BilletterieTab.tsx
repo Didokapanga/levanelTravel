@@ -72,7 +72,32 @@ export default function BilletterieTab() {
         { key: "total_commission", label: "Commission" },
         { key: "total_tax", label: "Tax" },
         { key: "status", label: "Status" },
-        { key: "date_emission", label: "Date émission" }
+        { key: "date_emission", label: "Date émission" },
+        {
+            key: "sync_status",
+            label: "Statut sync",
+            render: (row) => {
+                let badgeClass = "";
+                let label = "";
+
+                switch (row.sync_status) {
+                    case "clean":
+                        badgeClass = "badge-clean";
+                        label = "Clean";
+                        break;
+                    case "dirty":
+                        badgeClass = "badge-dirty";
+                        label = "Dirty";
+                        break;
+                    case "conflict":
+                        badgeClass = "badge-conflict";
+                        label = "Conflict";
+                        break;
+                }
+
+                return <span className={`badge ${badgeClass}`}>{label}</span>;
+            }
+        }
     ];
 
     return (
