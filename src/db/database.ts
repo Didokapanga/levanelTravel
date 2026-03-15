@@ -17,6 +17,8 @@ import type { AuditLog } from '../types/auditLog';
 import type { ChangeLog } from '../types/changeLog';
 import type { Airline } from '../types/airline';
 import type { OrtherOperations } from '../types/orther_operations';
+import type { Clients } from '../types/clients';
+import type { Recovery } from '../types/recovery';
 
 // ⚡ Fonction utilitaire pour supprimer une base IndexedDB
 async function clearOldDatabase(oldDbName: string) {
@@ -36,10 +38,13 @@ async function clearOldDatabase(oldDbName: string) {
   });
 }
 
-// ⚡ Supprimer l’ancienne base si nécessaire
-await clearOldDatabase('travel_agency_db'); // <-- remplace par le nom exact de l'ancienne base
+// ⚡ Supprimer les anciennes bases si nécessaire
+(async () => {
+  await clearOldDatabase('travel_agency_db').catch(() => { });
+  await clearOldDatabase('app_database').catch(() => { });
+})();
 
-// Maintenant on crée la nouvelle base
+// ⚡ Création de la nouvelle base
 export class AppDatabase extends Dexie {
   users!: Table<User, string>;
   systems!: Table<System, string>;
@@ -50,8 +55,10 @@ export class AppDatabase extends Dexie {
   contracts!: Table<Contract, string>;
   cautions!: Table<Caution, string>;
   stocks!: Table<Stock, string>;
+  clients!: Table<Clients, string>;
   financial_operations!: Table<FinancialOperation, string>;
   cash_flows!: Table<CashFlow, string>;
+  recoveries!: Table<Recovery, string>;
   operations!: Table<Operations, string>;
   orther_operations!: Table<OrtherOperations, string>;
   operation_segments!: Table<OperationSegments, string>;
@@ -59,9 +66,9 @@ export class AppDatabase extends Dexie {
   change_logs!: Table<ChangeLog, string>;
 
   constructor() {
-    super('app_database');
+    super('app_database_V2');
 
-    this.version(10).stores({
+    this.version(15).stores({
       users: `&id,&username,email,role,password,is_active,sync_status,is_deleted,updated_at`,
       systems: `&id,name,sync_status,is_deleted`,
       airlines: `&id,code,name,sync_status,is_deleted,updated_at`,
@@ -69,17 +76,20 @@ export class AppDatabase extends Dexie {
       partners: `&id,name,type,sync_status,is_deleted`,
       itineraires: `&id,code,country,sync_status,is_deleted`,
       contracts: `&id,partner_id,contract_type,status,start_date,end_date,sync_status,is_deleted`,
-      cautions: `&id,contract_id,sync_status,is_deleted,updated_at`,
-      stocks: `&id,contract_id,sync_status,is_deleted,updated_at`,
+      cautions: `&id,contract_id,date,sync_status,is_deleted,updated_at`,
+      stocks: `&id,contract_id,date,sync_status,is_deleted,updated_at`,
+      clients: `&id,name,client_type,sync_status,is_deleted,updated_at`,
+      recoveries: `&id,name,operation_id,client_id,payment_date,sync_status,is_deleted,updated_at`,
       financial_operations: `&id,operation_id,contract_id,source,type,sync_status,is_deleted,created_at`,
       cash_flows: `&id,direction,source,currency,contract_id,partner_id,operation_date,sync_status,is_deleted`,
-      operations: `&id,partner_id,service_id,contract_id,date_demande,date_emission,total_amount,total_commission,total_tax,status,receipt_reference,sync_status,is_deleted,updated_at`,
-      orther_operations: `&id,service_id,client_name,date_demande,date_emission,total_amount,service_fee,status,observation,sync_status,is_deleted,updated_at`,
-      operation_segments: `&id,operation_id,airline_id,system_id,itineraire_id,ticket_number,pnr,sync_status,is_deleted,updated_at`,
+      operations: `&id,partner_id,service_id,contract_id,date_demande,total_amount,client_id,pnr,status,receipt_reference,sync_status,is_deleted,updated_at`,
+      orther_operations: `&id,service_id,client_id,date_demande,receipt_reference,total_amount,service_fee,status,observation,sync_status,is_deleted,updated_at`,
+      operation_segments: `&id,operation_id,passenger_name,travel_class,airline_id,system_id,itineraire_id,ticket_number,departure_date,total_amount,tax,commission,service_fee,update_price,cancel_price,sync_status,is_deleted,updated_at`,
       audit_logs: `&id,entity_name,entity_id,action,user_id,timestamp,sync_status`,
       change_logs: `&id,table_name,record_id,column_name,updated_at,user_id,sync_status`
     });
   }
 }
 
+// ⚡ Export de l’instance prête à l’emploi
 export const db = new AppDatabase();

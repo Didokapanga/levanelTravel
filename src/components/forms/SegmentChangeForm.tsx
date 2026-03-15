@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
 import { Button } from "../Button";
+import Alert from "../Alert";
 
 import type { OperationSegments } from "../../types/operation_segments";
+import type { OperationWithDetails } from "../../types/operations";
+
 import { airlineService } from "../../services/AirlineService";
 import { systemService } from "../../services/SystemService";
 import { itineraireService } from "../../services/ItineraireService";
 import { operationService } from "../../services/OperationService";
 
 interface Props {
+    segmentType: "change" | "canceled";
     initialData?: Partial<OperationSegments>;
     onSubmit: (data: Partial<OperationSegments>) => void;
     onCancel: () => void;
@@ -18,7 +22,12 @@ interface Option {
     label: string;
 }
 
-export default function OperationSegmentForm({ initialData, onSubmit, onCancel }: Props) {
+export default function SegmentChangeForm({
+    segmentType,
+    initialData,
+    onSubmit,
+    onCancel
+}: Props) {
 
     const [formData, setFormData] = useState<Partial<OperationSegments>>({
         operation_id: initialData?.operation_id ?? "",
@@ -36,18 +45,19 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
         sold_debit: initialData?.sold_debit ?? 0,
         update_price: initialData?.update_price ?? 0,
         cancel_price: initialData?.cancel_price ?? 0,
-        operation_type: initialData?.operation_type ?? "sale",
+        operation_type: initialData?.operation_type ?? segmentType
     });
 
-    const [operations, setOperations] = useState<Option[]>([]);
     const [airlineOptions, setAirlineOptions] = useState<Option[]>([]);
     const [systemOptions, setSystemOptions] = useState<Option[]>([]);
     const [itineraireOptions, setItineraireOptions] = useState<Option[]>([]);
-    const [commissionPercent, setCommissionPercent] = useState<number>(0);
+    const [operations, setOperations] = useState<Option[]>([]);
+    const [operationsRaw, setOperationsRaw] = useState<OperationWithDetails[]>([]);
 
-    const isSale = formData.operation_type === "sale";
-    const isChange = formData.operation_type === "change";
-    const isCancel = formData.operation_type === "canceled";
+    const [alert, setAlert] = useState<{
+        type: "success" | "error" | "warning" | "info";
+        message: string;
+    } | null>(null);
 
     useEffect(() => {
 
@@ -58,24 +68,7 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
             const itineraires = await itineraireService.getAll();
             const ops = await operationService.getAllWithDetails();
 
-            let filteredOps;
-
-            const isEditing = !!initialData?.id;
-
-            if (isEditing) {
-                // modification : seulement l'opération du segment
-                filteredOps = ops.filter(o => o.id === initialData?.operation_id);
-            } else {
-                // création : seulement les opérations pending
-                filteredOps = ops.filter(o => o.status === "pending");
-            }
-
-            setOperations(
-                filteredOps.map(o => ({
-                    id: o.id,
-                    label: `${o.client_name} (${o.status})`
-                }))
-            );
+            setOperationsRaw(ops);
 
             setAirlineOptions(
                 airlines.map(a => ({
@@ -97,22 +90,20 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
                     label: i.code ?? ""
                 }))
             );
+
+            const filteredOps = ops.filter(o => o.status !== "pending");
+
+            setOperations(
+                filteredOps.map(o => ({
+                    id: o.id,
+                    label: `${o.client_name} (${o.status})`
+                }))
+            );
         };
 
         loadOptions();
 
-    }, [initialData]);
-
-    const numericFields = [
-        "tht",
-        "tax",
-        "service_fee",
-        "related_costs",
-        "commission",
-        "sold_debit",
-        "update_price",
-        "cancel_price"
-    ];
+    }, []);
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -120,75 +111,73 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
 
         const { name, value } = e.target;
 
-        const updated: any = {
-            ...formData,
+        const numericFields = [
+            "tht",
+            "tax",
+            "service_fee",
+            "related_costs",
+            "commission",
+            "sold_debit",
+            "update_price",
+            "cancel_price"
+        ];
+
+        setFormData(prev => ({
+            ...prev,
             [name]: numericFields.includes(name)
                 ? Number(value.replace(",", "."))
                 : value
-        };
+        }));
 
-        if (!isSale) {
-
-            updated.tht = 0;
-            updated.tax = 0;
-            updated.service_fee = 0;
-            updated.related_costs = 0;
-            updated.commission = 0;
-            updated.sold_debit = 0;
-
-        } else {
-
-            const ttc =
-                (updated.tht ?? 0) +
-                (updated.tax ?? 0) +
-                (updated.service_fee ?? 0) +
-                (updated.related_costs ?? 0);
-
-            updated.sold_debit = ttc - (updated.commission ?? 0);
-        }
-
-        setFormData(updated);
-    };
-
-    const handleCommissionPercent = (
-        e: React.ChangeEvent<HTMLInputElement>
-    ) => {
-
-        const percent = Number(e.target.value);
-
-        setCommissionPercent(percent);
-
-        setFormData(prev => {
-
-            const commission = ((prev.tht ?? 0) * percent) / 100;
-
-            const ttc =
-                (prev.tht ?? 0) +
-                (prev.tax ?? 0) +
-                (prev.service_fee ?? 0) +
-                (prev.related_costs ?? 0);
-
-            return {
-                ...prev,
-                commission,
-                sold_debit: ttc - commission
-            };
-        });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
+
         e.preventDefault();
+
+        setAlert(null);
+
+        const selectedOperation = operationsRaw.find(
+            o => o.id === formData.operation_id
+        );
+
+        if (!selectedOperation) {
+
+            setAlert({
+                type: "warning",
+                message: "Veuillez sélectionner une opération."
+            });
+
+            return;
+        }
+
+        // 🔒 Sécurité métier
+        if (segmentType === "change" && selectedOperation.status === "cancelled") {
+
+            setAlert({
+                type: "error",
+                message:
+                    "Impossible de créer une modification : cette opération est annulée."
+            });
+
+            return;
+        }
+
         onSubmit(formData);
+
     };
 
-    const ttcValue =
-        (formData.tht ?? 0) +
-        (formData.tax ?? 0) +
-        (formData.service_fee ?? 0) +
-        (formData.related_costs ?? 0);
-
     return (
+
         <form onSubmit={handleSubmit} className="app-form">
+
+            {alert && (
+                <Alert
+                    type={alert.type}
+                    message={alert.message}
+                    onClose={() => setAlert(null)}
+                />
+            )}
 
             <div className="form-grid">
 
@@ -198,29 +187,16 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
                         name="operation_id"
                         value={formData.operation_id ?? ""}
                         onChange={handleChange}
-                        disabled={!!initialData?.id}
                         required
                     >
                         <option value="">-- sélectionner --</option>
+
                         {operations.map(o => (
                             <option key={o.id} value={o.id}>
                                 {o.label}
                             </option>
                         ))}
-                    </select>
-                </div>
 
-                <div className="form-field">
-                    <label>Type d'opération</label>
-                    <select
-                        name="operation_type"
-                        value={formData.operation_type ?? "sale"}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="sale">Vente</option>
-                        <option value="change">Modification</option>
-                        <option value="canceled">Annulation</option>
                     </select>
                 </div>
 
@@ -257,11 +233,13 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
                         required
                     >
                         <option value="">-- sélectionner --</option>
+
                         {airlineOptions.map(o => (
                             <option key={o.id} value={o.id}>
                                 {o.label}
                             </option>
                         ))}
+
                     </select>
                 </div>
 
@@ -274,11 +252,13 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
                         required
                     >
                         <option value="">-- sélectionner --</option>
+
                         {systemOptions.map(o => (
                             <option key={o.id} value={o.id}>
                                 {o.label}
                             </option>
                         ))}
+
                     </select>
                 </div>
 
@@ -291,11 +271,13 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
                         required
                     >
                         <option value="">-- sélectionner --</option>
+
                         {itineraireOptions.map(o => (
                             <option key={o.id} value={o.id}>
                                 {o.label}
                             </option>
                         ))}
+
                     </select>
                 </div>
 
@@ -309,105 +291,25 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
                     />
                 </div>
 
-                {isSale && (
-                    <>
-                        <div className="form-field">
-                            <label>THT</label>
-                            <input
-                                type="number"
-                                name="tht"
-                                value={formData.tht}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div className="form-field">
-                            <label>Tax</label>
-                            <input
-                                type="number"
-                                name="tax"
-                                value={formData.tax}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div className="form-field">
-                            <label>Frais services</label>
-                            <input
-                                type="number"
-                                name="service_fee"
-                                value={formData.service_fee}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div className="form-field">
-                            <label>Frais connexe</label>
-                            <input
-                                type="number"
-                                name="related_costs"
-                                value={formData.related_costs}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div className="form-field">
-                            <label>% Commission</label>
-                            <input
-                                type="number"
-                                value={commissionPercent}
-                                onChange={handleCommissionPercent}
-                            />
-                        </div>
-
-                        <div className="form-field">
-                            <label>Commission</label>
-                            <input
-                                type="number"
-                                value={formData.commission}
-                                readOnly
-                            />
-                        </div>
-
-                        <div className="form-field">
-                            <label>TTC</label>
-                            <input
-                                type="number"
-                                value={ttcValue}
-                                readOnly
-                            />
-                        </div>
-
-                        <div className="form-field">
-                            <label>Sold Debit</label>
-                            <input
-                                type="number"
-                                value={formData.sold_debit}
-                                readOnly
-                            />
-                        </div>
-                    </>
-                )}
-
-                {isChange && (
+                {segmentType === "change" && (
                     <div className="form-field">
-                        <label>Frais modification</label>
+                        <label>Frais de modification</label>
                         <input
                             type="number"
                             name="update_price"
-                            value={formData.update_price}
+                            value={formData.update_price ?? 0}
                             onChange={handleChange}
                         />
                     </div>
                 )}
 
-                {isCancel && (
+                {segmentType === "canceled" && (
                     <div className="form-field">
-                        <label>Frais annulation</label>
+                        <label>Frais d'annulation</label>
                         <input
                             type="number"
                             name="cancel_price"
-                            value={formData.cancel_price}
+                            value={formData.cancel_price ?? 0}
                             onChange={handleChange}
                         />
                     </div>

@@ -43,13 +43,6 @@ export default function OperationViews({
                         icon={<FaFileInvoice />}
                         onClick={() => invoiceService.generateArchive(operation)}
                     />
-
-                    {/* <Button
-                        label="Fermer"
-                        variant="danger"
-                        icon={<FaTimes />}
-                        onClick={onClose}
-                    /> */}
                 </div>
             </div>
 
@@ -60,6 +53,11 @@ export default function OperationViews({
                 <div className="views-card">
 
                     <h3>🧾 Informations Opération</h3>
+
+                    <div className="views-item">
+                        <span>PNR</span>
+                        <b>{operation.pnr}</b>
+                    </div>
 
                     <div className="views-item">
                         <span>Client</span>
@@ -82,24 +80,20 @@ export default function OperationViews({
                     </div>
 
                     <div className="views-item">
-                        <span>Date émission</span>
-                        <b>{operation.date_emission}</b>
+                        <span>Reçu</span>
+                        <b>{operation.amount_received ?? 0}</b>
                     </div>
+
+                    <div className="views-item">
+                        <span>Reste</span>
+                        <b>{operation.remaining_amount ?? 0}</b>
+                    </div>
+
 
                     <div className="views-total">
                         <div>
                             <span>Total TTC</span>
-                            <b>{operation.total_amount.toFixed(2)}</b>
-                        </div>
-
-                        <div>
-                            <span>Commission</span>
-                            <b>{operation.total_commission ?? 0}</b>
-                        </div>
-
-                        <div>
-                            <span>Tax</span>
-                            <b>{operation.total_tax ?? 0}</b>
+                            <b>{(operation.total_amount ?? 0).toFixed(2)}</b>
                         </div>
                     </div>
 
@@ -127,7 +121,6 @@ export default function OperationViews({
 
                             <div className="segment-header">
                                 <b>{seg.airline_name}</b>
-                                <span>PNR : {seg.pnr}</span>
                             </div>
 
                             <div className="segment-grid">
@@ -143,6 +136,11 @@ export default function OperationViews({
                                 </div>
 
                                 <div>
+                                    <span>Commission</span>
+                                    <b>{seg.commission ?? 0}</b>
+                                </div>
+
+                                <div>
                                     <span>THT</span>
                                     <b>{seg.tht ?? 0}</b>
                                 </div>
@@ -155,16 +153,6 @@ export default function OperationViews({
                                 <div>
                                     <span>Service Fee</span>
                                     <b>{seg.service_fee ?? 0}</b>
-                                </div>
-
-                                <div>
-                                    <span>Reçu</span>
-                                    <b>{seg.amount_received ?? 0}</b>
-                                </div>
-
-                                <div>
-                                    <span>Reste</span>
-                                    <b>{seg.remaining_amount ?? 0}</b>
                                 </div>
 
                             </div>

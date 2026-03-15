@@ -47,7 +47,7 @@ export class InvoiceService {
 
         ws["B2"] = { v: operation.receipt_reference, t: "s" };
         ws["B3"] = { v: operation.client_name, t: "s" };
-        ws["B4"] = { v: operation.date_emission, t: "s" };
+        ws["B4"] = { v: operation.date_demande, t: "s" };
         ws["B5"] = { v: airlineName || "", t: "s" };
         ws["B6"] = { v: itineraireCode || "", t: "s" };
 
@@ -77,7 +77,7 @@ export class InvoiceService {
 
         ws["B2"] = { v: operation.receipt_reference, t: "s" };
         ws["B3"] = { v: operation.client_name, t: "s" };
-        ws["B4"] = { v: operation.date_emission, t: "s" };
+        ws["B4"] = { v: operation.date_demande, t: "s" };
         ws["B5"] = { v: airlineName || "", t: "s" };
         ws["B6"] = { v: itineraireCode || "", t: "s" };
 

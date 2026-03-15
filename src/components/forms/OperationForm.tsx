@@ -9,6 +9,8 @@ import { partnerService } from "../../services/PartnerService";
 import { contractService } from "../../services/ContractService";
 import { serviceService } from "../../services/ServiceService";
 import { operationService } from "../../services/OperationService";
+import type { Clients } from "../../types/clients";
+import { clientService } from "../../services/ClientService";
 
 interface Props {
     initialData?: Partial<Operations>;
@@ -27,12 +29,9 @@ export default function OperationForm({ initialData, onSubmit, onCancel }: Props
         partner_id: initialData?.partner_id ?? "",
         contract_id: initialData?.contract_id ?? "",
         service_id: initialData?.service_id ?? "",
-        client_name: initialData?.client_name ?? "",
+        client_id: initialData?.client_id ?? "",
         date_demande: initialData?.date_demande ?? "",
-        date_emission: initialData?.date_emission ?? "",
         total_amount: initialData?.total_amount,
-        total_commission: initialData?.total_commission,
-        total_tax: initialData?.total_tax,
         receipt_reference: initialData?.receipt_reference ?? "",
         observation: initialData?.observation ?? ""
     });
@@ -40,6 +39,7 @@ export default function OperationForm({ initialData, onSubmit, onCancel }: Props
     const [partnerOptions, setPartnerOptions] = useState<Option[]>([]);
     const [contractOptions, setContractOptions] = useState<Option[]>([]);
     const [serviceOptions, setServiceOptions] = useState<Option[]>([]);
+    const [clientOptions, setClientOptions] = useState<Option[]>([]);
 
     /* ========================= */
     /* CHARGER PARTENAIRES & SERVICES */
@@ -135,6 +135,28 @@ export default function OperationForm({ initialData, onSubmit, onCancel }: Props
         updateReference();
     }, [formData.date_demande]);
 
+    /**
+     * Changement client 
+     */
+    useEffect(() => {
+        const loadClients = async () => {
+            try {
+                const clients: Clients[] = await clientService.getAll();
+                setClientOptions(clients.map((c: Clients) => ({ id: c.id, label: c.name })));
+            } catch (err) {
+                console.error("Erreur chargement clients :", err);
+            }
+        };
+        loadClients();
+    }, []);
+
+    /* Remaining amount */
+    useEffect(() => {
+        const total = formData.total_amount ?? 0;
+        const received = formData.amount_received ?? 0;
+        setFormData(prev => ({ ...prev, remaining_amount: total - received }));
+    }, [formData.total_amount, formData.amount_received]);
+
     /* ========================= */
     /* HANDLE CHANGE             */
     /* ========================= */
@@ -145,8 +167,8 @@ export default function OperationForm({ initialData, onSubmit, onCancel }: Props
 
         setFormData(prev => ({
             ...prev,
-            [name]: ["total_amount", "total_commission", "total_tax"].includes(name)
-                ? Number(value.replace(",", "."))
+            [name]: ["total_amount", "amount_received", "remaining_amount"].includes(name)
+                ? Number(value)
                 : value
         }));
     };
@@ -208,9 +230,24 @@ export default function OperationForm({ initialData, onSubmit, onCancel }: Props
                 {/* Client */}
                 <div className="form-field">
                     <label>Client</label>
+                    <select
+                        name="client_id"
+                        value={formData.client_id}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="">-- sélectionner --</option>
+                        {clientOptions.map((c: Option) => <option key={c.id} value={c.id}>{c.label}</option>)}
+                    </select>
+                </div>
+
+                {/* Montant perçu */}
+                <div className="form-field">
+                    <label>PNR</label>
                     <input
-                        name="client_name"
-                        value={formData.client_name}
+                        type="text"
+                        name="pnr"
+                        value={formData.pnr ?? ""}
                         onChange={handleChange}
                         required
                     />
@@ -227,17 +264,6 @@ export default function OperationForm({ initialData, onSubmit, onCancel }: Props
                     />
                 </div>
 
-                {/* Date émission */}
-                <div className="form-field">
-                    <label>Date émission</label>
-                    <input
-                        type="date"
-                        name="date_emission"
-                        value={formData.date_emission?.slice(0, 10) || ""}
-                        onChange={handleChange}
-                    />
-                </div>
-
                 {/* Montant total */}
                 <div className="form-field">
                     <label>Montant total</label>
@@ -250,27 +276,26 @@ export default function OperationForm({ initialData, onSubmit, onCancel }: Props
                     />
                 </div>
 
-                {/* Commission */}
+                {/* Montant perçu */}
                 <div className="form-field">
-                    <label>Commission</label>
+                    <label>Montant perçu</label>
                     <input
                         type="number"
-                        name="total_commission"
-                        value={formData.total_commission}
+                        name="amount_received"
+                        value={formData.amount_received ?? ""}
                         onChange={handleChange}
                         required
                     />
                 </div>
 
-                {/* Taxe */}
+                {/* Montant restant */}
                 <div className="form-field">
-                    <label>Taxe</label>
+                    <label>Montant restant</label>
                     <input
                         type="number"
-                        name="total_tax"
-                        value={formData.total_tax}
-                        onChange={handleChange}
-                        required
+                        name="remaining_amount"
+                        value={formData.remaining_amount ?? ""}
+                        readOnly
                     />
                 </div>
 

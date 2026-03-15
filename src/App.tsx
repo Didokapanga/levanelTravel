@@ -24,6 +24,7 @@ import { PublicRoute } from './auth/PublicRoute';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 import { useEffect } from 'react';
 import { supabaseSyncService } from './services/SupabaseSyncService';
+import ClientsPage from './pages/Clients';
 
 
 function App() {
@@ -76,6 +77,7 @@ function App() {
           <Route path="/change_logs" element={<ChangeLogs />} />
           <Route path="/synchronisations" element={<Synchronisations />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/clients" element={<ClientsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

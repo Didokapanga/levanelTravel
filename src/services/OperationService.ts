@@ -6,6 +6,8 @@ import { operationsRepo } from "../db/repositories/OperationsRepository";
 import { partnerRepo } from "../db/repositories/PartnerRepository";
 import { contractRepo } from "../db/repositories/ContractRepository";
 import { serviceRepo } from "../db/repositories/ServiceRepository";
+import { clientRepo } from "../db/repositories/ClientRepository";
+import { operationSegmentsRepo } from "../db/repositories/OperationSegmentsRepository";
 
 export class OperationService {
 
@@ -28,12 +30,12 @@ export class OperationService {
         if (!data.partner_id) throw new Error("Partenaire requis");
         if (!data.contract_id) throw new Error("Contrat requis");
         if (!data.service_id) throw new Error("Service requis");
-        if (!data.client_name) throw new Error("Client requis");
+        if (!data.client_id) throw new Error("Client requis");
+        if (!data.pnr) throw new Error("Pnr requis");
         if (!data.total_amount || data.total_amount <= 0)
             throw new Error("Montant invalide");
 
         if (!data.date_demande) throw new Error("Date demande requise");
-        if (!data.date_emission) throw new Error("Date émission requise");
         if (!data.receipt_reference) throw new Error("Référence reçu requise");
 
         /* ---------- RÈGLE MÉTIER ---------- */
@@ -83,18 +85,21 @@ export class OperationService {
         const partners = await partnerRepo.getAll();
         const contracts = await contractRepo.getAll();
         const services = await serviceRepo.getAll();
+        const clients = await clientRepo.getAll();   // 👈 ajouté
 
         return ops.map(op => {
 
             const partner = partners.find(p => p.id === op.partner_id);
             const contract = contracts.find(c => c.id === op.contract_id);
             const service = services.find(s => s.id === op.service_id);
+            const client = clients.find(c => c.id === op.client_id); // 👈 ajouté
 
             return {
                 ...op,
                 partner_name: partner?.name,
                 contract_type: contract?.contract_type,
-                service_name: service?.name
+                service_name: service?.name,
+                client_name: client?.name        // 👈 ajouté
             };
         });
     }
@@ -108,18 +113,21 @@ export class OperationService {
         const partners = await partnerRepo.getAll();
         const contracts = await contractRepo.getAll();
         const services = await serviceRepo.getAll();
+        const clients = await clientRepo.getAll();   // 👈 ajouté
 
         return ops.map(op => {
 
             const partner = partners.find(p => p.id === op.partner_id);
             const contract = contracts.find(c => c.id === op.contract_id);
             const service = services.find(s => s.id === op.service_id);
+            const client = clients.find(c => c.id === op.client_id); // 👈 ajouté
 
             return {
                 ...op,
                 partner_name: partner?.name,
                 contract_type: contract?.contract_type,
-                service_name: service?.name
+                service_name: service?.name,
+                client_name: client?.name
             };
         });
     }
@@ -147,32 +155,23 @@ export class OperationService {
         return ops.filter(o => o.status === "validated");
     }
 
-    async getTotalServiceFees(): Promise<number> {
-        const validated = await this.getValidated();
-
-        const todayStr = new Date().toISOString().slice(0, 10);
-
-        const todayOps = validated.filter(
-            op => op.date_demande.slice(0, 10) === todayStr
-        );
-
-        return todayOps.reduce(
-            (sum, op) => sum + Number(op.total_commission ?? 0),
-            0
-        );
-    }
-
     async getValidatedCommissionToday(): Promise<number> {
-        const today = new Date().toISOString().slice(0, 10);
-        const ops = await this.getAllWithDetails();
 
-        return ops
-            .filter(o =>
-                o.status === "validated" &&
-                o.date_demande.startsWith(today) &&
-                o.contract_type !== "agency_service"
-            )
-            .reduce((sum, o) => sum + (o.total_commission ?? 0), 0);
+        const today = new Date().toISOString().slice(0, 10);
+
+        const ops = await operationsRepo.getAll();
+        const segments = await operationSegmentsRepo.getAll();
+
+        const todayOps = ops.filter(o =>
+            o.status === "validated" &&
+            o.date_demande.startsWith(today)
+        );
+
+        const ids = new Set(todayOps.map(o => o.id));
+
+        return segments
+            .filter(s => ids.has(s.operation_id))
+            .reduce((sum, s) => sum + Number(s.commission ?? 0), 0);
     }
 
     async getValidatedTodayWithDetails(): Promise<OperationWithDetails[]> {

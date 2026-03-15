@@ -1,5 +1,6 @@
 
 
+import { clientRepo } from "../db/repositories/ClientRepository";
 import { otherOperationsRepo } from "../db/repositories/OtherOperationsRepository";
 import { serviceRepo } from "../db/repositories/ServiceRepository";
 import type { OrtherOperations, OrtherOperationWithDetails } from "../types/orther_operations";
@@ -16,7 +17,7 @@ export class OtherOperationService {
 
     async create(data: Partial<OrtherOperations>) {
 
-        if (!data.client_name)
+        if (!data.client_id)
             throw new Error("client requis");
 
         if (!data.service_fee)
@@ -71,16 +72,31 @@ export class OtherOperationService {
 
         const ops = await otherOperationsRepo.getAll();
         const services = await serviceRepo.getAll();
+        const clients = await clientRepo.getAll();   // 👈 ajouté
+
 
         return ops.map(op => {
 
             const service = services.find(s => s.id === op.service_id);
+            const client = clients.find(c => c.id === op.client_id); // 👈 ajouté
 
             return {
                 ...op,
-                service_name: service?.name
+                service_name: service?.name,
+                client_name: client?.name        // 👈 ajouté
             };
         });
+    }
+
+    async getByDate(date: string): Promise<OrtherOperations[]> {
+
+        const ops = await otherOperationsRepo.getAll();
+
+        return ops.filter(op =>
+            op.date_demande?.slice(0, 10) === date &&
+            !op.is_deleted
+        );
+
     }
 }
 

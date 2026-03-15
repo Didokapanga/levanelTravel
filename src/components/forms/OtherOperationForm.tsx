@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { Button } from "../Button";
 
 import { serviceService } from "../../services/ServiceService";
+import { clientService } from "../../services/ClientService";
 import type { OrtherOperations } from "../../types/orther_operations";
+import { otherOperationService } from "../../services/OtherOperationService";
 
 interface Props {
     initialData?: Partial<OrtherOperations>;
@@ -22,22 +24,92 @@ export default function OtherOperationForm({
 }: Props) {
 
     const [services, setServices] = useState<Option[]>([]);
+    const [clients, setClients] = useState<Option[]>([]);
 
     const [formData, setFormData] = useState<Partial<OrtherOperations>>({
         service_id: initialData?.service_id ?? "",
-        client_name: initialData?.client_name ?? "",
+        client_id: initialData?.client_id ?? "",
         total_amount: initialData?.total_amount ?? 0,
         service_fee: initialData?.service_fee ?? 0,
         observation: initialData?.observation ?? "",
         date_demande: initialData?.date_demande ?? "",
-        date_emission: initialData?.date_emission ?? ""
+        receipt_reference: initialData?.receipt_reference ?? "", // ✅ AJOUT
+        status: initialData?.status ?? "pending"
     });
 
     useEffect(() => {
+        // Charger tous les services
         serviceService.getAll().then(s =>
             setServices(s.map(x => ({ id: x.id, label: x.name ?? "" })))
         );
+
+        // Charger tous les clients
+        clientService.getAll().then(c =>
+            setClients(c.map(x => ({ id: x.id, label: x.name ?? "" })))
+        );
     }, []);
+
+    useEffect(() => {
+
+        const generateReceiptReference = async (dateStr: string) => {
+
+            try {
+
+                const existingOps = await otherOperationService.getByDate(dateStr);
+
+                const numbers = existingOps
+                    .map((op: OrtherOperations) => {
+
+                        const parts = op.receipt_reference?.split("-");
+
+                        return parts?.length === 4
+                            ? parseInt(parts[3], 10)
+                            : 0;
+
+                    })
+                    .filter((n: number) => !isNaN(n));
+
+                const maxNumber =
+                    numbers.length > 0
+                        ? Math.max(...numbers)
+                        : 0;
+
+                const nextNumber = maxNumber + 1;
+
+                const numberStr =
+                    String(nextNumber).padStart(4, "0");
+
+                return `${dateStr}-${numberStr}`;
+
+            } catch (err) {
+
+                console.error("Erreur génération référence :", err);
+
+                return `${dateStr}-0001`;
+
+            }
+
+        };
+
+        const updateReference = async () => {
+
+            const date =
+                formData.date_demande
+                    ? formData.date_demande.slice(0, 10)
+                    : new Date().toISOString().slice(0, 10);
+
+            const ref = await generateReceiptReference(date);
+
+            setFormData(prev => ({
+                ...prev,
+                receipt_reference: ref
+            }));
+
+        };
+
+        updateReference();
+
+    }, [formData.date_demande]);
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -59,7 +131,6 @@ export default function OtherOperationForm({
 
     return (
         <form onSubmit={handleSubmit} className="app-form">
-
             <div className="form-grid">
 
                 <div className="form-field">
@@ -68,6 +139,7 @@ export default function OtherOperationForm({
                         name="service_id"
                         value={formData.service_id}
                         onChange={handleChange}
+                        required
                     >
                         <option value="">-- sélectionner --</option>
                         {services.map(s =>
@@ -78,12 +150,17 @@ export default function OtherOperationForm({
 
                 <div className="form-field">
                     <label>Client</label>
-                    <input
-                        name="client_name"
-                        value={formData.client_name}
+                    <select
+                        name="client_id"
+                        value={formData.client_id}
                         onChange={handleChange}
                         required
-                    />
+                    >
+                        <option value="">-- sélectionner --</option>
+                        {clients.map(c =>
+                            <option key={c.id} value={c.id}>{c.label}</option>
+                        )}
+                    </select>
                 </div>
 
                 <div className="form-field">
@@ -116,16 +193,16 @@ export default function OtherOperationForm({
                         name="date_demande"
                         value={formData.date_demande?.slice(0, 10) || ""}
                         onChange={handleChange}
+                        required
                     />
                 </div>
 
                 <div className="form-field">
-                    <label>Date émission</label>
+                    <label>Référence reçu</label>
                     <input
-                        type="date"
-                        name="date_emission"
-                        value={formData.date_emission?.slice(0, 10) || ""}
-                        onChange={handleChange}
+                        name="receipt_reference"
+                        value={formData.receipt_reference ?? ""}
+                        readOnly
                     />
                 </div>
 

@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const login = async (username: string, password: string) => {
         // ✅ Cas admin hors DB
         if (username === 'admin') {
-            const adminPassword = 'motdepasse123'; // <- ton mot de passe admin fixe
+            const adminPassword = '2026'; // <- ton mot de passe admin fixe
             if (password !== adminPassword) {
                 throw new Error('Mot de passe admin incorrect');
             }

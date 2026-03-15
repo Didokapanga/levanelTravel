@@ -95,7 +95,7 @@ export default function Dashboard() {
                                 id: op.id!,
                                 title: op.service_name ?? "Service",
                                 subtitle: `Client: ${op.client_name}`,
-                                right: `${op.total_amount.toLocaleString()} $`
+                                right: `${(op.total_amount ?? 0).toLocaleString()} $`
                             }))}
                         />
                     </div>

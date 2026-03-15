@@ -6,6 +6,7 @@ import type {
     OperationSegmentWithDetails
 } from "../types/operation_segments";
 import { operationService } from "./OperationService";
+import { clientRepo } from "../db/repositories/ClientRepository";
 
 class OperationSegmentsService {
 
@@ -43,14 +44,23 @@ class OperationSegmentsService {
 
     async getTotalServiceFeeValidated(): Promise<number> {
 
-        const validatedOps = await operationService.getValidated();
+        const today = new Date().toISOString().slice(0, 10);
+
+        const operations = await operationService.getValidated();
         const segments = await operationSegmentsRepo.getAll();
 
-        const validatedIds = new Set(validatedOps.map(o => o.id));
+        const todayOps = operations.filter(o =>
+            o.date_demande.startsWith(today)
+        );
+
+        const operationIds = new Set(todayOps.map(o => o.id));
 
         return segments
-            .filter(s => validatedIds.has(s.operation_id))
-            .reduce((sum, s) => sum + Number(s.service_fee ?? 0), 0);
+            .filter(s => operationIds.has(s.operation_id))
+            .reduce(
+                (sum, s) => sum + Number(s.service_fee ?? 0),
+                0
+            );
     }
 
     /* ============================ */
@@ -61,39 +71,53 @@ class OperationSegmentsService {
 
         const segments = await operationSegmentsRepo.getAll();
 
-        return Promise.all(
-            segments.map(async (s) => {
+        const airlines = await db.airlines.toArray();
+        const systems = await db.systems.toArray();
+        const itineraires = await db.itineraires.toArray();
+        const operations = await db.operations.toArray();
+        const clients = await clientRepo.getAll();
 
-                const airline = s.airline_id
-                    ? await db.airlines.get(s.airline_id)
-                    : undefined;
+        const airlineMap = new Map(airlines.map(a => [a.id, a]));
+        const systemMap = new Map(systems.map(s => [s.id, s]));
+        const itineraireMap = new Map(itineraires.map(i => [i.id, i]));
+        const operationMap = new Map(operations.map(o => [o.id, o]));
+        const clientMap = new Map(clients.map(c => [c.id, c]));
 
-                const system = s.system_id
-                    ? await db.systems.get(s.system_id)
-                    : undefined;
+        return segments.map((s) => {
 
-                const itineraire = s.itineraire_id
-                    ? await db.itineraires.get(s.itineraire_id)
-                    : undefined;
+            const airline = s.airline_id
+                ? airlineMap.get(s.airline_id)
+                : undefined;
 
-                const operation = await db.operations.get(s.operation_id);
+            const system = s.system_id
+                ? systemMap.get(s.system_id)
+                : undefined;
 
-                const dto: OperationSegmentWithDetails = {
-                    ...s,
+            const itineraire = s.itineraire_id
+                ? itineraireMap.get(s.itineraire_id)
+                : undefined;
 
-                    receipt_reference: operation?.receipt_reference,
+            const operation = operationMap.get(s.operation_id);
 
-                    airline_name: airline?.name,
-                    system_name: system?.name,
-                    itineraire_code: itineraire?.code,
+            const client = operation?.client_id
+                ? clientMap.get(operation.client_id)
+                : undefined;
 
-                    operation_client: operation?.client_name,
-                    operation_date: operation?.date_emission
-                };
+            const dto: OperationSegmentWithDetails = {
+                ...s,
 
-                return dto;
-            })
-        );
+                receipt_reference: operation?.receipt_reference,
+
+                airline_name: airline?.name,
+                system_name: system?.name,
+                itineraire_code: itineraire?.code,
+
+                operation_client: client?.name,   // ✅ NOM DU CLIENT
+                operation_date: operation?.date_demande
+            };
+
+            return dto;
+        });
     }
 
     async getUpdatesOrCancellations(): Promise<OperationSegmentWithDetails[]> {

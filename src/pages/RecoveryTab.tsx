@@ -4,39 +4,37 @@ import { ButtonTable } from "../components/ButtonTable";
 import { Table, type Column } from "../components/Table";
 import { Modal } from "../components/Modal";
 
-import OtherOperationForm from "../components/forms/OtherOperationForm";
+import RecoveryForm from "../components/forms/RecoveryForm";
 
 import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 
 import { useAuth } from "../auth/AuthContext";
 import { canEditOperation } from "../utils/permissions";
 
-import { useAssistances } from "../hooks/useAssistances";
 
-import type { OrtherOperations } from "../types/orther_operations";
+import type { RecoveryWithDetails } from "../types/recovery";
+import { useRecoveries } from "../hooks/useRecoveries";
 
-export default function AssistanceTab() {
+export default function RecoveryTab() {
 
-    const { assistances, createOrUpdate, remove } = useAssistances();
+    const { recoveries, createOrUpdate, remove } = useRecoveries();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingAssist, setEditingAssist] = useState<OrtherOperations | null>(null);
+    const [editingRecovery, setEditingRecovery] = useState<RecoveryWithDetails | null>(null);
 
-    // 🔹 FILTRE DATE
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
 
     const { user } = useAuth();
     const isAllowed = canEditOperation(user?.role);
 
-    // 🔹 FILTRAGE
-    const filteredAssistances = useMemo(() => {
+    const filteredRecoveries = useMemo(() => {
 
-        return assistances.filter(a => {
+        return recoveries.filter(r => {
 
-            if (!a.date_demande) return false;
+            if (!r.payment_date) return false;
 
-            const d = new Date(a.date_demande);
+            const d = new Date(r.payment_date);
 
             if (startDate) {
                 const start = new Date(startDate);
@@ -50,18 +48,37 @@ export default function AssistanceTab() {
             }
 
             return true;
+
         });
 
-    }, [assistances, startDate, endDate]);
+    }, [recoveries, startDate, endDate]);
 
-    const columns: Column<OrtherOperations>[] = [
-        { key: "receipt_reference", label: "Référence reçu" },
+    const columns: Column<RecoveryWithDetails>[] = [
+
+        { key: "receipt_reference", label: "Référence" },
+
         { key: "client_name", label: "Client" },
-        { key: "service_name", label: "Service" },
-        { key: "total_amount", label: "Montant" },
-        { key: "service_fee", label: "Frais service" },
-        { key: "status", label: "Status" },
-        { key: "date_demande", label: "Date demande" },
+
+        {
+            key: "amount",
+            label: "Montant",
+            render: r => r.amount.toFixed(2)
+        },
+
+        {
+            key: "remaining_amount",
+            label: "Reste",
+            render: r => r.remaining_amount?.toFixed(2) ?? "0"
+        },
+
+        {
+            key: "payment_date",
+            label: "Date paiement",
+            render: r =>
+                r.payment_date
+                    ? new Date(r.payment_date).toLocaleDateString()
+                    : ""
+        },
         {
             key: "sync_status",
             label: "Statut sync",
@@ -87,35 +104,42 @@ export default function AssistanceTab() {
                 return <span className={`badge ${badgeClass}`}>{label}</span>;
             }
         }
+
     ];
 
     return (
         <>
-            {/* 🔹 HEADER + FILTRE */}
+
+            {/* HEADER */}
+
             <div style={{ marginBottom: 15, display: "flex", justifyContent: "space-between" }}>
+
                 {isAllowed && (
                     <Button
-                        label="Nouvelle assistance"
+                        label="Nouveau recouvrement"
                         icon={<FaPlus />}
                         variant="info"
                         onClick={() => {
-                            setEditingAssist(null);
+                            setEditingRecovery(null);
                             setIsModalOpen(true);
                         }}
                     />
                 )}
 
                 <div style={{ display: "flex", gap: 10 }}>
+
                     <input
                         type="date"
                         value={startDate}
                         onChange={e => setStartDate(e.target.value)}
                     />
+
                     <input
                         type="date"
                         value={endDate}
                         onChange={e => setEndDate(e.target.value)}
                     />
+
                     <Button
                         label="Reset"
                         variant="secondary"
@@ -124,13 +148,16 @@ export default function AssistanceTab() {
                             setEndDate("");
                         }}
                     />
+
                 </div>
+
             </div>
 
-            {/* 🔹 TABLE */}
+            {/* TABLE */}
+
             <Table
                 columns={columns}
-                data={filteredAssistances}
+                data={filteredRecoveries}
                 actions={(row) => (
                     isAllowed && (
                         <>
@@ -138,10 +165,11 @@ export default function AssistanceTab() {
                                 icon={<FaEdit />}
                                 variant="secondary"
                                 onClick={() => {
-                                    setEditingAssist(row);
+                                    setEditingRecovery(row);
                                     setIsModalOpen(true);
                                 }}
                             />
+
                             <ButtonTable
                                 icon={<FaTrash />}
                                 variant="danger"
@@ -152,25 +180,34 @@ export default function AssistanceTab() {
                 )}
             />
 
-            {/* 🔹 MODAL */}
+            {/* MODAL */}
+
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title={editingAssist ? "Modifier assistance" : "Créer assistance"}
+                title={editingRecovery ? "Modifier recouvrement" : "Nouveau recouvrement"}
             >
-                <OtherOperationForm
-                    initialData={editingAssist ?? undefined}
+
+                <RecoveryForm
+                    initialData={editingRecovery ?? undefined}
                     onSubmit={async (data) => {
-                        await createOrUpdate(data, editingAssist);
+
+                        await createOrUpdate(data, editingRecovery);
+
                         setIsModalOpen(false);
-                        setEditingAssist(null);
+                        setEditingRecovery(null);
+
                     }}
                     onCancel={() => {
+
                         setIsModalOpen(false);
-                        setEditingAssist(null);
+                        setEditingRecovery(null);
+
                     }}
                 />
+
             </Modal>
+
         </>
     );
 }

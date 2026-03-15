@@ -5,6 +5,7 @@ import { supabase } from "./supabaseClient";
 // Toutes tes tables à synchroniser
 export const syncTables = [
     "users",
+    "clients",
     "systems",
     "services",
     "airlines",
@@ -13,6 +14,7 @@ export const syncTables = [
     "contracts",
     "cautions",
     "stocks",
+    "recoveries",
     "operations",
     "orther_operations",
     "operation_segments",

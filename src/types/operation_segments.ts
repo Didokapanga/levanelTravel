@@ -5,22 +5,38 @@ export type OperationType =
     | 'change'
     | 'canceled';
 
+export type TravelClassList =
+    | 'economy'
+    | 'premium_economy'
+    | 'business'
+    | 'first';
+
 export interface OperationSegments extends BaseEntity {
     operation_id: string;
+
+    passenger_name: string;
+    travel_class?: TravelClassList;
+
     airline_id?: string;
     system_id?: string;
     itineraire_id?: string;
+
     ticket_number?: string;
-    pnr?: string;
+
+    date_emission?: string;
+    departure_date?: string;
+
+    operation_type: OperationType;
+
     tht?: number;
     tax?: number;
-    operation_type: OperationType;
-    related_costs?: number;
-    service_fee?: number;
-    commission?: number;
+    total_amount?: number;
+
     sold_debit?: number;
-    amount_received?: number;
-    remaining_amount?: number;
+    commission?: number;
+    service_fee?: number;
+    related_costs?: number;
+
     update_price?: number;
     cancel_price?: number;
 }

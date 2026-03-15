@@ -12,16 +12,29 @@ export class UserService {
             throw new Error('username, email et password sont requis');
         }
 
-        // hash du mot de passe côté client (si nécessaire)
-        const hashedPassword = bcrypt.hashSync(user.password!, 10);
-        user.password = hashedPassword;
+        const hashedPassword = bcrypt.hashSync(user.password, 10);
 
-        return userRepo.create(user);
+        return userRepo.create({
+            ...user,
+            password: hashedPassword,
+        });
     }
 
     /** Mettre à jour un utilisateur */
     async update(id: string, updates: Partial<User>): Promise<User | undefined> {
-        return userRepo.update(id, updates);
+        const payload = { ...updates };
+
+        if (typeof payload.password === "string") {
+            const trimmedPassword = payload.password.trim();
+
+            if (trimmedPassword) {
+                payload.password = bcrypt.hashSync(trimmedPassword, 10);
+            } else {
+                delete payload.password;
+            }
+        }
+
+        return userRepo.update(id, payload);
     }
 
     async findByUsername(username: string): Promise<User[]> {

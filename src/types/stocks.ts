@@ -4,6 +4,7 @@ export interface Stock extends BaseEntity {
     contract_id: string;        // lien vers le contrat
     amount_initial: number;     // montant de stock acheté
     amount_remaining: number;   // montant encore disponible
+    date: string;   // ISO
 }
 
 export interface StockWithDetails extends Stock {

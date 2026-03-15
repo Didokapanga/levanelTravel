@@ -40,9 +40,6 @@ export default function ValidationCard({ operation, segments, onValidate, onCanc
             )}
             <p><strong>Service :</strong> {operation.service_name ?? "-"}</p>
             <p><strong>Date demande :</strong> {operation.date_demande}</p>
-            {operation.date_emission && (
-                <p><strong>Date émission :</strong> {operation.date_emission}</p>
-            )}
             {operation.total_amount !== undefined && (
                 <p><strong>TTC :</strong> {operation.total_amount}</p>
             )}
@@ -55,7 +52,6 @@ export default function ValidationCard({ operation, segments, onValidate, onCanc
                             <li key={s.id}>
                                 {s.airline_name ?? ""} | Ticket: {s.ticket_number} |
                                 Sold Debit: {s.sold_debit ?? 0} |
-                                Remaining: {s.remaining_amount ?? 0}
                             </li>
                         ))}
                     </ul>

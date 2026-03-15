@@ -45,9 +45,9 @@ export default function BilletterieTab() {
 
         return operations.filter(op => {
 
-            if (!op.date_emission) return false;
+            if (!op.date_demande) return false;
 
-            const emissionDate = new Date(op.date_emission);
+            const emissionDate = new Date(op.date_demande);
 
             if (startDate) {
                 const start = new Date(startDate);
@@ -70,11 +70,11 @@ export default function BilletterieTab() {
         { key: "partner_name", label: "Partenaire" },
         { key: "service_name", label: "Service" },
         { key: "client_name", label: "Client" },
-        { key: "total_amount", label: "TTC" },
-        { key: "total_commission", label: "Commission" },
-        { key: "total_tax", label: "Tax" },
+        { key: "total_amount", label: "Montant total" },
+        { key: "amount_received", label: "Montant reçu" },
+        { key: "remaining_amount", label: "Montant restant" },
         { key: "status", label: "Status" },
-        { key: "date_emission", label: "Date émission" },
+        { key: "date_demande", label: "Date demande" },
         {
             key: "sync_status",
             label: "Statut sync",

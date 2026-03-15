@@ -56,6 +56,10 @@ export default function Cautions() {
             label: "Partenaire"
         },
         {
+            key: "date",
+            label: "Date opération"
+        },
+        {
             key: "amount_initial",
             label: "Montant initial"
         },

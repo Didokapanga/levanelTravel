@@ -15,6 +15,7 @@ import type { OperationSegments } from "../types/operation_segments";
 import type { OperationSegmentWithDetails } from "../types/operation_segments";
 import { useAuth } from "../auth/AuthContext";
 import { canEditOperation } from "../utils/permissions";
+import SegmentChangeForm from "../components/forms/SegmentChangeForm";
 
 export default function SegmentOperations() {
 
@@ -78,40 +79,110 @@ export default function SegmentOperations() {
 
     const columns: Column<OperationSegmentWithDetails>[] = [
         { key: "operation_client", label: "Client" },
-        { key: "ticket_number", label: "Ticket" },
-        { key: "pnr", label: "PNR" },
+        { key: "passenger_name", label: "Passager" },
+        { key: "travel_class", label: "Travel classe" },
+        { key: "ticket_number", label: "N° Ticket" },
         { key: "airline_name", label: "Airline" },
         { key: "system_name", label: "System" },
         { key: "itineraire_code", label: "Itinéraire" },
-        { key: "operation_type", label: "Sale or change" },
-        { key: "tht", label: "THT" },
-        { key: "tax", label: "Tax" },
-        { key: "commission", label: "Commission" },
-        { key: "service_fee", label: "Frais services" },
-        { key: "related_costs", label: "Frais connexe" },
-        { key: "amount_received", label: "TTC" },
-        { key: "sold_debit", label: "Débit compte" },
-        { key: "operation_date", label: "Date opération" },
+        {
+            key: "operation_type",
+            label: "Sale / Change",
+            render: (row) => {
+                switch (row.operation_type) {
+                    case "sale":
+                        return "Sale";
+                    case "change":
+                        return "Change";
+                    case "canceled":
+                        return "Canceled";
+                    default:
+                        return "";
+                }
+            }
+        },
+
+        {
+            key: "tht",
+            label: "THT",
+            render: (row) => row.tht?.toFixed(2) ?? "0"
+        },
+
+        {
+            key: "tax",
+            label: "Tax",
+            render: (row) => row.tax?.toFixed(2) ?? "0"
+        },
+
+        {
+            key: "commission",
+            label: "Commission",
+            render: (row) => row.commission?.toFixed(2) ?? "0"
+        },
+
+        {
+            key: "service_fee",
+            label: "Frais services",
+            render: (row) => row.service_fee?.toFixed(2) ?? "0"
+        },
+
+        {
+            key: "related_costs",
+            label: "Frais connexe",
+            render: (row) => row.related_costs?.toFixed(2) ?? "0"
+        },
+
+        {
+            key: "sold_debit",
+            label: "Débit compte",
+            render: (row) => row.sold_debit?.toFixed(2) ?? "0"
+        },
+
+        {
+            key: "update_price",
+            label: "Frais de modification",
+            render: (row) => row.update_price?.toFixed(2) ?? "0"
+        },
+        {
+            key: "cancel_price",
+            label: "Frais d'annulation",
+            render: (row) => row.cancel_price?.toFixed(2) ?? "0"
+        },
+
+        {
+            key: "operation_date",
+            label: "Date opération",
+            render: (row) =>
+                row.operation_date
+                    ? new Date(row.operation_date).toLocaleDateString()
+                    : ""
+        },
+
         {
             key: "sync_status",
             label: "Statut sync",
             render: (row) => {
+
                 let badgeClass = "";
                 let label = "";
 
                 switch (row.sync_status) {
+
                     case "clean":
                         badgeClass = "badge-clean";
                         label = "Clean";
                         break;
+
                     case "dirty":
                         badgeClass = "badge-dirty";
                         label = "Dirty";
                         break;
+
                     case "conflict":
                         badgeClass = "badge-conflict";
                         label = "Conflict";
                         break;
+
                 }
 
                 return <span className={`badge ${badgeClass}`}>{label}</span>;
@@ -168,15 +239,6 @@ export default function SegmentOperations() {
                             />
 
                         </div>
-                        // <Button
-                        //     label="Nouveau segment"
-                        //     icon={<FaPlus />}
-                        //     variant="info"
-                        //     onClick={() => {
-                        //         setEditingSegment(null);
-                        //         setIsModalOpen(true);
-                        //     }}
-                        // />
                     )}
                 </div>
             </div>
@@ -217,6 +279,38 @@ export default function SegmentOperations() {
                         setIsModalOpen(false);
                     }}
                 />
+            </Modal>
+
+            {/* ===== Modal ===== */}
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={
+                    editingSegment
+                        ? segmentType === "change"
+                            ? "Modifier segment"
+                            : "Annuler segment"
+                        : segmentType === "sale"
+                            ? "Créer segment"
+                            : segmentType === "change"
+                                ? "Modifier segment"
+                                : "Annuler segment"
+                }
+            >
+                {segmentType === "sale" ? (
+                    <SegmentOperationForm
+                        initialData={editingSegment ?? undefined}
+                        onSubmit={handleSubmit}
+                        onCancel={() => setIsModalOpen(false)}
+                    />
+                ) : (
+                    <SegmentChangeForm
+                        segmentType={segmentType} // "change" ou "canceled"
+                        initialData={editingSegment ?? undefined}
+                        onSubmit={handleSubmit}
+                        onCancel={() => setIsModalOpen(false)}
+                    />
+                )}
             </Modal>
 
         </div>

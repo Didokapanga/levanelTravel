@@ -4,12 +4,13 @@ import OperationFilters from "../components/OperationFilters";
 import ReportCards from "../components/ReportCards";
 
 import { useOperations } from "../hooks/useOperations";
-import { useAssistances } from "../hooks/useAssistances";
 import { operationSegmentsService } from "../services/OperationSegmentsService";
+import { serviceService } from "../services/ServiceService";
+import { otherOperationService } from "../services/OtherOperationService";
 
 export default function ReportTab() {
+
     const { operations } = useOperations();
-    const { assistances } = useAssistances();
 
     const [reportStart, setReportStart] = useState("");
     const [reportEnd, setReportEnd] = useState("");
@@ -17,70 +18,148 @@ export default function ReportTab() {
     const [reportData, setReportData] = useState<any[]>([]);
 
     const generateReport = async () => {
+
         const start = reportStart ? new Date(reportStart) : null;
         const end = reportEnd ? new Date(reportEnd) : null;
         const ref = reportRef.trim();
-
-        // Charger tous les segments enrichis
-        const allSegments = await operationSegmentsService.getAllWithDetails();
+        const otherOps = await otherOperationService.getAllWithDetails();
 
         // Filtrer les opérations
         const filteredOps = operations.filter(o => {
-            const d = new Date(o.date_emission || "");
+            const d = new Date(o.date_demande || "");
             if (start && d < start) return false;
             if (end && d > end) return false;
             if (ref && o.receipt_reference?.trim() !== ref) return false;
             return true;
         });
 
-        // Construire reportData à partir des segments liés aux opérations
+        // Map pour accès rapide aux opérations
+        const operationMap = new Map(filteredOps.map(o => [o.id, o]));
+
+        // Charger tous les segments enrichis
+        const allSegments = await operationSegmentsService.getAllWithDetails();
+        // Charger tous les services
+        const allServices = await serviceService.getAll();
+        const serviceMap = new Map(allServices.map(s => [s.id, s]));
+
+        // Construire reportData à partir des segments
         const opsWithSegments = allSegments
-            .filter(s => filteredOps.some(o => o.id === s.operation_id))
-            .map(s => ({
-                type: "billetterie",
-                receipt_reference: s.receipt_reference || s.operation_id,
-                client_name: s.operation_client || "",
-                service_name: "", // tu peux ajouter si disponible dans operation
-                tht: s.tht || 0,
-                tax: s.tax || 0,
-                total_amount: s.amount_received || 0,
-                service_fee: s.service_fee || 0,
-                related_costs: s.related_costs || 0,
-                commission: s.commission || 0,
-                sold_debit: s.sold_debit || 0,
-                operation_type: s.operation_type,
-                itineraire_id: s.itineraire_id || "",
-                status: filteredOps.find(o => o.id === s.operation_id)?.status || "",
-                date_emission: s.operation_date || "",
-                airline_name: s.airline_name,
-                system_name: s.system_name,
-                itineraire_code: s.itineraire_code
-            }));
+            .filter(s => operationMap.has(s.operation_id))
+            .map(s => {
 
-        // Filtrer les assistances si pas de référence
-        const assists = ref
+                const operation = operationMap.get(s.operation_id);
+
+                const service = serviceMap.get(operation?.service_id || "");
+
+                return {
+                    type: "billetterie",
+
+                    receipt_reference: operation?.receipt_reference || "",
+                    client_name: s.operation_client || "",
+
+                    service_name: service?.name || "",
+
+                    tht: s.tht || 0,
+                    tax: s.tax || 0,
+
+                    total_amount: operation?.amount_received || 0,
+
+                    service_fee: s.service_fee || 0,
+                    related_costs: s.related_costs || 0,
+                    commission: s.commission || 0,
+                    sold_debit: s.sold_debit || 0,
+
+                    update_price: s.update_price || 0,
+                    cancel_price: s.cancel_price || 0,
+
+                    operation_type: s.operation_type,
+                    itineraire_id: s.itineraire_id || "",
+
+                    status: operation?.status || "",
+
+                    date_demande: s.operation_date || "",
+
+                    airline_name: s.airline_name,
+                    system_name: s.system_name,
+                    itineraire_code: s.itineraire_code
+                };
+            });
+
+        const others = ref
             ? []
-            : assistances.filter(a => {
-                const d = new Date(a.date_demande || "");
-                if (start && d < start) return false;
-                if (end && d > end) return false;
-                return true;
-            }).map(a => ({ ...a, type: "assistance" }));
+            : otherOps
+                .filter(o => {
+                    const d = new Date(o.date_demande || "");
 
-        setReportData([...opsWithSegments, ...assists]);
+                    if (start && d < start) return false;
+                    if (end && d > end) return false;
+
+                    return true;
+                })
+                .map(o => ({
+
+                    type: "assistance",
+
+                    receipt_reference: o.receipt_reference || "",
+                    client_name: o.client_name || "",
+                    service_name: o.service_name || "",
+
+                    tht: "",
+                    tax: "",
+
+                    service_fee: o.service_fee || 0,
+                    related_costs: 0,
+                    commission: 0,
+
+                    total_amount: o.total_amount || 0,
+
+                    sold_debit: "",
+
+                    operation_type: "",
+                    itineraire_id: "",
+
+                    airline_name: "",
+                    system_name: "",
+                    itineraire_code: "",
+
+                    status: o.status,
+                    date_demande: o.date_demande
+                }));
+
+        setReportData([...opsWithSegments, ...others]);
     };
 
-    const totalSales = reportData
-        .filter(r => r.type === "billetterie")
-        .reduce((s, r) => s + Number(r.total_amount || 0), 0);
+    /* ========================= */
+    /* STATISTIQUES              */
+    /* ========================= */
 
-    const totalAssist = reportData
-        .filter(r => r.type === "assistance")
-        .reduce((s, r) => s + Number(r.total_amount || 0), 0);
+    // Pour total ventes, on prend chaque opération unique (par receipt_reference)
+    const uniqueOperations = Array.from(
+        new Map(
+            reportData
+                .filter(r => r.type === "billetterie")
+                .map(r => [r.receipt_reference, r])
+        ).values()
+    );
+
+    const totalSales = uniqueOperations
+        .filter(r => r.status !== "cancelled")
+        .reduce(
+            (sum, r) => sum + Number(r.total_amount || 0),
+            0
+        );
 
     const totalCommission = reportData
         .filter(r => r.type === "billetterie")
-        .reduce((s, r) => s + Number(r.commission || 0), 0);
+        .reduce((sum, r) => sum + Number(r.commission || 0), 0);
+
+    const totalAssist = reportData
+        .filter(r => r.type === "assistance")
+        .reduce((sum, r) => sum + Number(r.total_amount || 0), 0);
+
+    /* ========================= */
+    /* TABLE                     */
+    /* ========================= */
 
     const columns: Column<any>[] = [
         { key: "type", label: "Type" },
@@ -92,15 +171,16 @@ export default function ReportTab() {
         { key: "service_fee", label: "Frais service" },
         { key: "related_costs", label: "Frais connexe" },
         { key: "commission", label: "Commission" },
+        { key: "update_price", label: "Frais modification" },
+        { key: "cancel_price", label: "Frais annulation" },
         { key: "total_amount", label: "Montant" },
         { key: "sold_debit", label: "Debit partenaire" },
         { key: "operation_type", label: "Sale or change" },
-        { key: "itineraire_id", label: "Itineraire" },
         { key: "airline_name", label: "Compagnie" },
         { key: "system_name", label: "System" },
         { key: "itineraire_code", label: "Code itinéraire" },
         { key: "status", label: "Statut" },
-        { key: "date_emission", label: "Date" }
+        { key: "date_demande", label: "Date" }
     ];
 
     return (

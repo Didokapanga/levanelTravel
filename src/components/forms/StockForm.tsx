@@ -15,14 +15,16 @@ interface Props {
 
 interface ContractOption {
     id: string;
-    label: string; // Nom partenaire + type de contrat
+    label: string;
 }
 
 export default function StockForm({ initialData, onSubmit, onCancel }: Props) {
+
     const [formData, setFormData] = useState<Partial<Stock>>({
         contract_id: initialData?.contract_id ?? "",
         amount_initial: initialData?.amount_initial ?? 0,
         amount_remaining: initialData?.amount_remaining ?? 0,
+        date: initialData?.date ?? new Date().toISOString() // ✔ initialisation
     });
 
     const [contractOptions, setContractOptions] = useState<ContractOption[]>([]);
@@ -32,11 +34,13 @@ export default function StockForm({ initialData, onSubmit, onCancel }: Props) {
             const contracts: Contract[] = await contractService.getAll();
             const partners = await partnerService.getAll();
 
-            // Filtrer uniquement les contrats de type 'caution_and_stock'
-            const filtered = contracts.filter(c => c.contract_type === "caution_and_stock");
+            const filtered = contracts.filter(
+                c => c.contract_type === "caution_and_stock"
+            );
 
             const options: ContractOption[] = filtered.map(c => {
                 const partner = partners.find(p => p.id === c.partner_id);
+
                 return {
                     id: c.id,
                     label: `${partner?.name ?? "Sans partenaire"} - ${c.contract_type}`
@@ -49,21 +53,33 @@ export default function StockForm({ initialData, onSubmit, onCancel }: Props) {
         loadContracts();
     }, []);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    ) => {
+
         const { name, value } = e.target;
+
         setFormData(prev => ({
             ...prev,
-            [name]: name.includes("amount") ? Number(value) : value
+            [name]:
+                name.includes("amount")
+                    ? Number(value)
+                    : value
         }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSubmit(formData);
+
+        onSubmit({
+            ...formData,
+            date: formData.date ?? new Date().toISOString()
+        });
     };
 
     return (
         <form onSubmit={handleSubmit} className="app-form">
+
             <div className="form-group">
                 <label>Contrat (caution + stock)</label>
                 <select
@@ -73,14 +89,35 @@ export default function StockForm({ initialData, onSubmit, onCancel }: Props) {
                     required
                 >
                     <option value="">-- Sélectionnez un contrat --</option>
+
                     {contractOptions.map(opt => (
-                        <option key={opt.id} value={opt.id}>{opt.label}</option>
+                        <option key={opt.id} value={opt.id}>
+                            {opt.label}
+                        </option>
                     ))}
+
                 </select>
             </div>
 
+
+            {/* Date */}
+            <div className="form-group">
+                <label>Date</label>
+
+                <input
+                    type="date"
+                    name="date"
+                    value={formData.date ? formData.date.slice(0, 10) : ""}
+                    onChange={handleChange}
+                    required
+                />
+
+            </div>
+
+
             <div className="form-group">
                 <label>Montant initial</label>
+
                 <input
                     type="number"
                     name="amount_initial"
@@ -88,22 +125,36 @@ export default function StockForm({ initialData, onSubmit, onCancel }: Props) {
                     onChange={handleChange}
                     required
                 />
+
             </div>
+
 
             <div className="form-group">
                 <label>Montant restant</label>
+
                 <input
                     type="number"
                     name="amount_remaining"
                     value={formData.amount_remaining}
                     onChange={handleChange}
                 />
+
             </div>
 
+
             <div className="form-actions">
-                <Button type="button" label="Annuler" onClick={onCancel} />
-                <Button type="submit" label="Enregistrer" />
+                <Button
+                    type="button"
+                    label="Annuler"
+                    onClick={onCancel}
+                />
+
+                <Button
+                    type="submit"
+                    label="Enregistrer"
+                />
             </div>
+
         </form>
     );
 }

@@ -9,6 +9,7 @@ export type CashSource =
     | 'refund'        // remboursement
     | 'expense'       // dépense interne
     | 'service'       // autre service vendu
+    | 'recovery'   // recouvrement 
     | 'adjustment';   // correction / régularisation
 
 export interface CashFlow extends BaseEntity {

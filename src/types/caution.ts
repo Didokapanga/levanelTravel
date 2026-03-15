@@ -4,6 +4,7 @@ export interface Caution extends BaseEntity {
     contract_id: string;       // lien vers le contrat
     amount_initial: number;    // montant initial déposé
     amount_remaining: number;  // montant disponible
+    date: string;   // ISO
 }
 
 export interface CautionWithDetails extends Caution {

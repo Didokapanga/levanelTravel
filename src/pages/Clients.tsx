@@ -1,34 +1,32 @@
-// src/pages/Stocks.tsx
+// src/pages/Clients.tsx
 import { useEffect, useState } from "react";
 import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import { Button } from "../components/Button";
 import { Table, type Column } from "../components/Table";
 import { Modal } from "../components/Modal";
-import StockForm from "../components/forms/StockForm";
 import "../styles/pages.css";
-import type { Stock, StockWithDetails } from "../types/stocks";
-import { stockService } from "../services/StockService";
+import { clientService } from "../services/ClientService";
+import type { Clients } from "../types/clients";
 import { ButtonTable } from "../components/ButtonTable";
 import { useAuth } from "../auth/AuthContext";
 import { canEditOperation } from "../utils/permissions";
+import ClientForm from "../components/forms/ClientForm";
 
-export default function Stocks() {
-    const [stocks, setStocks] = useState<StockWithDetails[]>([]);
+export default function ClientsPage() {
+    const [clients, setClients] = useState<Clients[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingStock, setEditingStock] = useState<StockWithDetails | null>(null);
+    const [editingClient, setEditingClient] = useState<Clients | null>(null);
 
     const { user } = useAuth();
     const isAllowed = canEditOperation(user?.role);
 
-    const columns: Column<StockWithDetails>[] = [
-        { key: "partner_name", label: "Partenaire" },
-        {
-            key: "date",
-            label: "Date opération"
-        },
-        { key: "contract_type", label: "Type de contrat" },
-        { key: "amount_initial", label: "Montant initial" },
-        { key: "amount_remaining", label: "Montant restant" },
+    const columns: Column<Clients>[] = [
+        { key: "name", label: "Nom" },
+        { key: "client_type", label: "Type" },
+        { key: "phone", label: "Téléphone" },
+        { key: "contact_person", label: "Personne a contacter" },
+        { key: "email", label: "Email" },
+        { key: "tax_number", label: "N° Impot / RCCM" },
         {
             key: 'sync_status',
             label: 'Statut sync',
@@ -51,101 +49,97 @@ export default function Stocks() {
                 }
                 return <span className={`badge ${badgeClass}`}>{label}</span>;
             }
-        }
+        },
     ];
 
-    const loadStocks = async () => {
-        const all = await stockService.getAllWithDetails();
-        setStocks(all);
+    const loadClients = async () => {
+        const all = await clientService.getAll();
+        setClients(all);
     };
 
     useEffect(() => {
-        loadStocks();
+        loadClients();
     }, []);
 
-    const handleCreateOrUpdateStock = async (data: Partial<Stock>) => {
-        if (editingStock) {
-            const updated = await stockService.update(editingStock.id, data);
-            setStocks(prev =>
-                prev.map(s => (s.id === updated?.id ? { ...s, ...updated } : s))
+    const handleCreateClient = async (data: Partial<Clients>) => {
+        if (editingClient) {
+            const updated = await clientService.update(editingClient.id, data);
+            setClients(prev =>
+                prev.map(c => (c.id === updated?.id ? updated : c))
             );
-            setEditingStock(null);
+            setEditingClient(null);
         } else {
-            const created = await stockService.create(data);
-            const full = await stockService.getById(created.id);
-            if (full) {
-                const enriched = await stockService.getByContractWithDetails(full.contract_id);
-                setStocks(prev => [...prev, enriched[0]]);
-            }
+            const created = await clientService.create(data);
+            setClients(prev => [...prev, created]);
         }
         setIsModalOpen(false);
     };
 
-    const handleEdit = (stock: StockWithDetails) => {
-        setEditingStock(stock);
+    const handleEdit = (client: Clients) => {
+        setEditingClient(client);
         setIsModalOpen(true);
     };
 
     const handleDelete = async (id: string) => {
-        await stockService.delete(id);
-        setStocks(prev => prev.filter(s => s.id !== id));
+        await clientService.delete(id);
+        setClients(prev => prev.filter(c => c.id !== id));
     };
 
     return (
         <div className="page-container">
             <div className="page-header">
                 <div className="page-header-left">
-                    <h1>Gestion des stocks</h1>
-                    <p>Liste complète des stocks</p>
+                    <h1>Gestion des clients</h1>
+                    <p>Liste complète des clients</p>
                 </div>
                 <div className="page-header-right">
                     {isAllowed && (
                         <Button
-                            label="Ajouter un stock"
+                            label="Créer un client"
                             icon={<FaPlus />}
                             variant="info"
                             onClick={() => {
-                                setEditingStock(null);
+                                setEditingClient(null);
                                 setIsModalOpen(true);
                             }}
-                        />)}
+                        />
+                    )}
                 </div>
             </div>
 
             <Table
                 columns={columns}
-                data={stocks}
-                actions={(row: StockWithDetails) => (
+                data={clients}
+                actions={(row: Clients) => (
                     isAllowed ? (
                         <>
                             <ButtonTable
                                 icon={<FaEdit />}
                                 variant="secondary"
                                 onClick={() => handleEdit(row)}
-                                label="Modifier"
                             />
                             <ButtonTable
                                 icon={<FaTrash />}
                                 variant="danger"
                                 onClick={() => handleDelete(row.id)}
-                                label="Supprimer"
                             />
-                        </>) : null
+                        </>
+                    ) : null
                 )}
             />
 
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title={editingStock ? "Modifier un stock" : "Ajouter un stock"}
+                title={editingClient ? "Modifier un client" : "Créer un client"}
             >
-                <StockForm
-                    initialData={editingStock ?? undefined}
-                    onSubmit={handleCreateOrUpdateStock}
+                <ClientForm
+                    onSubmit={handleCreateClient}
                     onCancel={() => {
-                        setEditingStock(null);
+                        setEditingClient(null);
                         setIsModalOpen(false);
                     }}
+                    initialData={editingClient ?? undefined}
                 />
             </Modal>
         </div>

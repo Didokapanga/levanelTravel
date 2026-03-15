@@ -20,7 +20,7 @@ export function Table<T>({
     data,
     className,
     actions,
-    pageSize = 8 // 👈 10 lignes par défaut
+    pageSize = 10 // 👈 10 lignes par défaut
 }: TableProps<T>) {
 
     const [currentPage, setCurrentPage] = useState(1);
