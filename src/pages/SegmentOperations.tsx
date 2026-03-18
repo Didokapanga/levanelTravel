@@ -89,16 +89,28 @@ export default function SegmentOperations() {
             key: "operation_type",
             label: "Sale / Change",
             render: (row) => {
+
+                let label = "";
+                let className = "";
+
                 switch (row.operation_type) {
                     case "sale":
-                        return "Sale";
+                        label = "Sale";
+                        className = "op-sale";
+                        break;
+
                     case "change":
-                        return "Change";
+                        label = "Change";
+                        className = "op-change";
+                        break;
+
                     case "canceled":
-                        return "Canceled";
-                    default:
-                        return "";
+                        label = "Canceled";
+                        className = "op-canceled";
+                        break;
                 }
+
+                return <span className={className}>{label}</span>;
             }
         },
 
@@ -135,18 +147,44 @@ export default function SegmentOperations() {
         {
             key: "sold_debit",
             label: "Débit compte",
-            render: (row) => row.sold_debit?.toFixed(2) ?? "0"
+            render: (row) => {
+                const value = row.sold_debit ?? 0;
+
+                let className = "";
+
+                if (row.operation_type === "sale") className = "amount-sale";
+                if (row.operation_type === "change") className = "amount-change";
+                if (row.operation_type === "canceled") className = "amount-canceled";
+
+                return <span className={className}>{value.toFixed(2)}</span>;
+            }
         },
 
         {
             key: "update_price",
             label: "Frais de modification",
-            render: (row) => row.update_price?.toFixed(2) ?? "0"
+            render: (row) => {
+                const value = row.update_price ?? 0;
+
+                return (
+                    <span className={value > 0 ? "amount-change" : ""}>
+                        {value.toFixed(2)}
+                    </span>
+                );
+            }
         },
         {
             key: "cancel_price",
             label: "Frais d'annulation",
-            render: (row) => row.cancel_price?.toFixed(2) ?? "0"
+            render: (row) => {
+                const value = row.cancel_price ?? 0;
+
+                return (
+                    <span className={value > 0 ? "amount-canceled" : ""}>
+                        {value.toFixed(2)}
+                    </span>
+                );
+            }
         },
 
         {

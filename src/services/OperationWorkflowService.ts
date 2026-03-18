@@ -9,6 +9,7 @@ import { financialOperationService } from "./FinancialOperationService";
 import type { OperationWithDetails } from "../types/operations";
 import type { OperationSegmentWithDetails } from "../types/operation_segments";
 import type { Contract } from "../types/contract";
+import { round2 } from "../utils/money";
 
 export class OperationWorkflowService {
 
@@ -74,31 +75,50 @@ export class OperationWorkflowService {
         // --------------------------------------------------
         // 3️⃣ Vérifier que tout le montant à déduire est disponible
         // --------------------------------------------------
+
+        let stocks: any[] = [];
+        let cautions: any[] = [];
+
+        if (contractType === "caution_and_stock") {
+            stocks = await stockService.getByContractWithDetails(operation.contract_id);
+        }
+
+        if (contractType === "caution_only") {
+            cautions = await cautionService.getByContractWithDetails(operation.contract_id);
+        }
+
         for (const seg of segmentsToUse) {
-            const valueToDeduct = seg.sold_debit ?? 0;
+            const valueToDeduct = round2(seg.sold_debit ?? 0);
             if (valueToDeduct <= 0) continue;
 
             if (contractType === "caution_and_stock") {
-                const totalAvailable = (await stockService.getByContractWithDetails(operation.contract_id))
-                    .reduce((sum, s) => sum + (s.amount_remaining ?? 0), 0);
+                const totalAvailable = stocks
+                    .reduce((sum, s) => round2(sum + round2(s.amount_remaining ?? 0)), 0);
+
                 if (totalAvailable < valueToDeduct) {
-                    throw new Error(`Stock insuffisant pour le contrat. Il manque ${valueToDeduct - totalAvailable}.`);
-                }
-            } else if (contractType === "caution_only") {
-                const totalAvailable = (await cautionService.getByContractWithDetails(operation.contract_id))
-                    .reduce((sum, c) => sum + (c.amount_remaining ?? 0), 0);
-                if (totalAvailable < valueToDeduct) {
-                    throw new Error(`Caution insuffisante pour le contrat. Il manque ${valueToDeduct - totalAvailable}.`);
+                    throw new Error(
+                        `Stock insuffisant pour le contrat. Il manque ${round2(valueToDeduct - totalAvailable)}.`
+                    );
                 }
             }
-            // agency_service → aucune vérification
+
+            else if (contractType === "caution_only") {
+                const totalAvailable = cautions
+                    .reduce((sum, c) => round2(sum + round2(c.amount_remaining ?? 0)), 0);
+
+                if (totalAvailable < valueToDeduct) {
+                    throw new Error(
+                        `Caution insuffisante pour le contrat. Il manque ${round2(valueToDeduct - totalAvailable)}.`
+                    );
+                }
+            }
         }
 
         // --------------------------------------------------
         // 4️⃣ Appliquer les déductions et mettre à jour les segments
         // --------------------------------------------------
         for (const seg of segmentsToUse) {
-            const valueToDeduct = seg.sold_debit ?? 0;
+            const valueToDeduct = round2(seg.sold_debit ?? 0);
             if (valueToDeduct <= 0) continue;
 
             if (contractType === "caution_and_stock") {
@@ -133,7 +153,7 @@ export class OperationWorkflowService {
                 contract_id: operation.contract_id,
                 source: contractType === "caution_only" ? "caution" : "stock",
                 type: "deduction",
-                amount: operation.total_amount,
+                amount: round2(operation.total_amount ?? 0),
                 description: `Déduction ${contractType} pour l'opération client ${operation.client_name}`,
                 sync_status: "dirty"
             });

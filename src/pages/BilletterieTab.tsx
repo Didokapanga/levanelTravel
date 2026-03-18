@@ -70,10 +70,68 @@ export default function BilletterieTab() {
         { key: "partner_name", label: "Partenaire" },
         { key: "service_name", label: "Service" },
         { key: "client_name", label: "Client" },
-        { key: "total_amount", label: "Montant total" },
-        { key: "amount_received", label: "Montant reçu" },
-        { key: "remaining_amount", label: "Montant restant" },
-        { key: "status", label: "Status" },
+        {
+            key: "total_amount",
+            label: "Montant total",
+            render: (row) => {
+                const value = row.total_amount ?? 0;
+                return <span>{value.toFixed(2)}</span>;
+            }
+        },
+        {
+            key: "amount_received",
+            label: "Montant reçu",
+            render: (row) => {
+                const value = row.amount_received ?? 0;
+                return <span>{value.toFixed(2)}</span>;
+            }
+        },
+        {
+            key: "remaining_amount",
+            label: "Montant restant",
+            render: (row) => {
+                const value = row.remaining_amount ?? 0;
+
+                let className = "";
+
+                if (value === 0) className = "amount-ok";
+                else if (value > 0) className = "amount-warning";
+                else className = "amount-danger";
+
+                return <span className={className}>{value.toFixed(2)}</span>;
+            }
+        },
+        {
+            key: "status",
+            label: "Status",
+            render: (row) => {
+
+                let label = "";
+                let className = "";
+
+                switch (row.status) {
+                    case "pending":
+                        label = "En attente";
+                        className = "status-pending";
+                        break;
+
+                    case "validated":
+                        label = "Validé";
+                        className = "status-validated";
+                        break;
+
+                    case "cancelled":
+                        label = "Annulé";
+                        className = "status-canceled";
+                        break;
+
+                    default:
+                        label = row.status;
+                }
+
+                return <span className={className}>{label}</span>;
+            }
+        },
         { key: "date_demande", label: "Date demande" },
         {
             key: "sync_status",

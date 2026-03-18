@@ -28,7 +28,11 @@ export default function Stocks() {
         },
         { key: "contract_type", label: "Type de contrat" },
         { key: "amount_initial", label: "Montant initial" },
-        { key: "amount_remaining", label: "Montant restant" },
+        {
+            key: "amount_remaining",
+            label: "Montant restant",
+            render: (row) => (row.amount_remaining ?? 0).toFixed(2)
+        },
         {
             key: 'sync_status',
             label: 'Statut sync',

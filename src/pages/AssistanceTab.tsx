@@ -60,7 +60,37 @@ export default function AssistanceTab() {
         { key: "service_name", label: "Service" },
         { key: "total_amount", label: "Montant" },
         { key: "service_fee", label: "Frais service" },
-        { key: "status", label: "Status" },
+        {
+            key: "status",
+            label: "Status",
+            render: (row) => {
+
+                let label = "";
+                let className = "";
+
+                switch (row.status) {
+                    case "pending":
+                        label = "En attente";
+                        className = "status-pending";
+                        break;
+
+                    case "validated":
+                        label = "Validé";
+                        className = "status-validated";
+                        break;
+
+                    case "cancelled":
+                        label = "Annulé";
+                        className = "status-canceled";
+                        break;
+
+                    default:
+                        label = row.status;
+                }
+
+                return <span className={className}>{label}</span>;
+            }
+        },
         { key: "date_demande", label: "Date demande" },
         {
             key: "sync_status",

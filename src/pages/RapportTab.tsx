@@ -171,11 +171,76 @@ export default function ReportTab() {
         { key: "service_fee", label: "Frais service" },
         { key: "related_costs", label: "Frais connexe" },
         { key: "commission", label: "Commission" },
-        { key: "update_price", label: "Frais modification" },
-        { key: "cancel_price", label: "Frais annulation" },
+        {
+            key: "update_price",
+            label: "Frais de modification",
+            render: (row) => {
+                const value = row.update_price ?? 0;
+
+                return (
+                    <span className={value > 0 ? "amount-change" : ""}>
+                        {value.toFixed(2)}
+                    </span>
+                );
+            }
+        },
+        {
+            key: "cancel_price",
+            label: "Frais d'annulation",
+            render: (row) => {
+                const value = row.cancel_price ?? 0;
+
+                return (
+                    <span className={value > 0 ? "amount-canceled" : ""}>
+                        {value.toFixed(2)}
+                    </span>
+                );
+            }
+        },
         { key: "total_amount", label: "Montant" },
-        { key: "sold_debit", label: "Debit partenaire" },
-        { key: "operation_type", label: "Sale or change" },
+        {
+            key: "sold_debit",
+            label: "Débit partenaire",
+            render: (row) => {
+                const value = row.sold_debit ?? 0;
+
+                let className = "";
+
+                if (row.operation_type === "sale") className = "amount-sale";
+                if (row.operation_type === "change") className = "amount-change";
+                if (row.operation_type === "canceled") className = "amount-canceled";
+
+                return <span className={className}>{value.toFixed(2)}</span>;
+            }
+        },
+        {
+            key: "operation_type",
+            label: "Sale / Change",
+            render: (row) => {
+
+                let label = "";
+                let className = "";
+
+                switch (row.operation_type) {
+                    case "sale":
+                        label = "Sale";
+                        className = "op-sale";
+                        break;
+
+                    case "change":
+                        label = "Change";
+                        className = "op-change";
+                        break;
+
+                    case "canceled":
+                        label = "Canceled";
+                        className = "op-canceled";
+                        break;
+                }
+
+                return <span className={className}>{label}</span>;
+            }
+        },
         { key: "airline_name", label: "Compagnie" },
         { key: "system_name", label: "System" },
         { key: "itineraire_code", label: "Code itinéraire" },

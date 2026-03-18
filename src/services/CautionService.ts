@@ -4,6 +4,7 @@ import type { CautionWithDetails } from '../types/caution';
 import { cautionRepo } from '../db/repositories/CautionRepository';
 import { contractRepo } from '../db/repositories/ContractRepository';
 import { partnerRepo } from '../db/repositories/PartnerRepository';
+import { round2 } from '../utils/money';
 
 export class CautionService {
 
@@ -92,26 +93,35 @@ export class CautionService {
         const cautions = await this.getByContractWithDetails(contract_id);
         if (!cautions.length) throw new Error("Caution introuvable pour ce contrat");
 
-        let remainingToDeduct = amount;
+        let remainingToDeduct = round2(amount);
 
         for (const caution of cautions) {
-            const available = caution.amount_remaining ?? 0;
+            const available = round2(caution.amount_remaining ?? 0);
             if (available <= 0) continue;
 
-            const deduction = Math.min(available, remainingToDeduct);
-            caution.amount_remaining = available - deduction;
+            const deduction = round2(Math.min(available, remainingToDeduct));
+
+            const newRemaining = round2(available - deduction);
+
+            caution.amount_remaining = newRemaining;
             caution.sync_status = "dirty";
             caution.version = (caution.version ?? 0) + 1;
             caution.updated_at = new Date().toISOString();
 
-            await this.update(caution.id, caution);
+            await this.update(caution.id, {
+                ...caution,
+                amount_remaining: newRemaining
+            });
 
-            remainingToDeduct -= deduction;
+            remainingToDeduct = round2(remainingToDeduct - deduction);
+
             if (remainingToDeduct <= 0) break;
         }
 
         if (remainingToDeduct > 0) {
-            throw new Error(`Caution insuffisante pour le contrat. Il manque ${remainingToDeduct}.`);
+            throw new Error(
+                `Caution insuffisante pour le contrat. Il manque ${round2(remainingToDeduct)}.`
+            );
         }
     }
 }

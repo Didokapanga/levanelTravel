@@ -65,7 +65,8 @@ export default function Cautions() {
         },
         {
             key: "amount_remaining",
-            label: "Montant restant"
+            label: "Montant restant",
+            render: (row) => (row.amount_remaining ?? 0).toFixed(2)
         },
         {
             key: 'sync_status',

@@ -226,3 +226,88 @@
         text-align: center;
     }
 }
+
+/* ========================= */
+/* OPERATION TYPE COLORS */
+/* ========================= */
+
+.op-sale {
+    color: #2563eb;
+    /* bleu */
+    font-weight: 500;
+}
+
+.op-change {
+    color: #f59e0b;
+    /* orange */
+    font-weight: 500;
+}
+
+.op-canceled {
+    color: #ef4444;
+    /* rouge */
+    font-weight: 500;
+}
+
+/* Montants */
+.amount-sale {
+    color: #2563eb;
+}
+
+.amount-change {
+    color: #f59e0b;
+}
+
+.amount-canceled {
+    color: #ef4444;
+}
+
+/* ========================= */
+/* OPERATION STATUS */
+/* ========================= */
+
+.status-pending {
+    background-color: #f59e0b;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.status-validated {
+    background-color: #10b981;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.status-canceled {
+    background-color: #ef4444;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+/* ========================= */
+/* MONTANT RESTANT */
+/* ========================= */
+
+.amount-ok {
+    color: #10b981;
+    /* vert */
+    font-weight: 600;
+}
+
+.amount-warning {
+    color: #f59e0b;
+    /* orange */
+    font-weight: 600;
+}
+
+.amount-danger {
+    color: #ef4444;
+    /* rouge */
+    font-weight: 600;
+}

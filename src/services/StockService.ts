@@ -3,6 +3,7 @@ import type { Stock, StockWithDetails } from '../types/stocks';
 import { stockRepo } from '../db/repositories/StockRepository';
 import { contractRepo } from '../db/repositories/ContractRepository';
 import { partnerRepo } from '../db/repositories/PartnerRepository';
+import { round2 } from '../utils/money';
 
 export class StockService {
 
@@ -64,27 +65,36 @@ export class StockService {
         const stocks = await this.getByContractWithDetails(contract_id);
         if (!stocks.length) throw new Error("Stock introuvable pour ce contrat");
 
-        let remainingToDeduct = amount;
+        let remainingToDeduct = round2(amount);
 
         for (const stock of stocks) {
-            const available = stock.amount_remaining ?? 0;
+
+            const available = round2(stock.amount_remaining ?? 0);
             if (available <= 0) continue;
 
-            const deduction = Math.min(available, remainingToDeduct);
-            stock.amount_remaining = available - deduction;
+            const deduction = round2(Math.min(available, remainingToDeduct));
+
+            const newRemaining = round2(available - deduction);
+
+            stock.amount_remaining = newRemaining;
             stock.sync_status = "dirty";
             stock.version = (stock.version ?? 0) + 1;
             stock.updated_at = new Date().toISOString();
 
-            await this.update(stock.id, stock);
+            await this.update(stock.id, {
+                ...stock,
+                amount_remaining: newRemaining
+            });
 
-            remainingToDeduct -= deduction;
+            remainingToDeduct = round2(remainingToDeduct - deduction);
+
             if (remainingToDeduct <= 0) break;
         }
 
         if (remainingToDeduct > 0) {
-            // 💡 Tu peux remplacer ce throw par un state Alert dans React si besoin
-            throw new Error(`Stock insuffisant pour le contrat. Il manque ${remainingToDeduct}.`);
+            throw new Error(
+                `Stock insuffisant pour le contrat. Il manque ${round2(remainingToDeduct)}.`
+            );
         }
     }
 }
