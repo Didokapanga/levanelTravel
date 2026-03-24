@@ -132,7 +132,7 @@ export default function OperationViews({
 
                                 <div>
                                     <span>Itinéraire</span>
-                                    <b>{seg.itineraire_code}</b>
+                                    <b>{seg.itineraire}</b>
                                 </div>
 
                                 <div>
