@@ -42,6 +42,7 @@ async function clearOldDatabase(oldDbName: string) {
 (async () => {
   await clearOldDatabase('travel_agency_db').catch(() => { });
   await clearOldDatabase('app_database').catch(() => { });
+  await clearOldDatabase('app_database_V2').catch(() => { });
 })();
 
 // ⚡ Création de la nouvelle base
@@ -66,9 +67,9 @@ export class AppDatabase extends Dexie {
   change_logs!: Table<ChangeLog, string>;
 
   constructor() {
-    super('app_database_V2');
+    super('app_database_V3');
 
-    this.version(15).stores({
+    this.version(17).stores({
       users: `&id,&username,email,role,password,is_active,sync_status,is_deleted,updated_at`,
       systems: `&id,name,sync_status,is_deleted`,
       airlines: `&id,code,name,sync_status,is_deleted,updated_at`,
@@ -84,7 +85,7 @@ export class AppDatabase extends Dexie {
       cash_flows: `&id,direction,source,currency,contract_id,partner_id,operation_date,sync_status,is_deleted`,
       operations: `&id,partner_id,service_id,contract_id,date_demande,total_amount,client_id,pnr,status,receipt_reference,sync_status,is_deleted,updated_at`,
       orther_operations: `&id,service_id,client_id,date_demande,receipt_reference,total_amount,service_fee,status,observation,sync_status,is_deleted,updated_at`,
-      operation_segments: `&id,operation_id,passenger_name,travel_class,airline_id,system_id,itineraire_id,ticket_number,departure_date,total_amount,tax,commission,service_fee,update_price,cancel_price,sync_status,is_deleted,updated_at`,
+      operation_segments: `&id,operation_id,passenger_name,travel_class,airline_id,system_id,itineraire,ticket_number,departure_date,total_amount,tax,commission,service_fee,update_price,cancel_price,sync_status,is_deleted,updated_at`,
       audit_logs: `&id,entity_name,entity_id,action,user_id,timestamp,sync_status`,
       change_logs: `&id,table_name,record_id,column_name,updated_at,user_id,sync_status`
     });

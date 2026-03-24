@@ -23,7 +23,14 @@ export default function Users() {
         { key: "username", label: "Nom" },
         { key: "email", label: "Email" },
         { key: "role", label: "Rôle" },
-        { key: "created_at", label: "Date de création" },
+        {
+            key: "created_at",
+            label: "Date de création",
+            render: (row) =>
+                row.created_at
+                    ? row.created_at.split("T")[0]
+                    : ""
+        },
         {
             key: "sync_status",
             label: "Statut sync",

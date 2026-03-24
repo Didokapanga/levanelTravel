@@ -4,6 +4,8 @@ import { ButtonTable } from "../components/ButtonTable";
 import { Table, type Column } from "../components/Table";
 import { Modal } from "../components/Modal";
 
+import "../styles/pages.css";
+
 import OperationForm from "../components/forms/OperationForm";
 import OperationViews from "../components/Views/OperationViews";
 
@@ -177,7 +179,7 @@ export default function BilletterieTab() {
                 )}
 
                 {/* 🔹 FILTRES DATE */}
-                <div style={{ display: "flex", gap: 10 }}>
+                <div className="filtre-section">
                     <input
                         type="date"
                         value={startDate}

@@ -4,6 +4,8 @@ import { ButtonTable } from "../components/ButtonTable";
 import { Table, type Column } from "../components/Table";
 import { Modal } from "../components/Modal";
 
+import "../styles/pages.css";
+
 import OtherOperationForm from "../components/forms/OtherOperationForm";
 
 import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
@@ -135,7 +137,7 @@ export default function AssistanceTab() {
                     />
                 )}
 
-                <div style={{ display: "flex", gap: 10 }}>
+                <div className="filtre-section">
                     <input
                         type="date"
                         value={startDate}

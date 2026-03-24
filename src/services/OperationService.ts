@@ -23,7 +23,7 @@ export class OperationService {
         return operationsRepo.getById(id);
     }
 
-    async create(data: Partial<Operations>): Promise<Operations> {
+    async create(data: Partial<Operations>,): Promise<Operations> {
 
         /* ---------- Validation métier ---------- */
 

@@ -23,7 +23,25 @@ export default function SegmentOperations() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSegment, setEditingSegment] = useState<OperationSegments | null>(null);
 
+    const [filters, setFilters] = useState({
+        passenger_name: "",
+        ticket_number: "",
+        operation_type: "",
+        segment_reference: ""
+    });
+
     const [segmentType, setSegmentType] = useState<"sale" | "change" | "canceled">("sale");
+
+    const filteredSegments = segments.filter(seg => {
+
+        return (
+            seg.passenger_name?.toLowerCase().includes(filters.passenger_name.toLowerCase()) &&
+            seg.ticket_number?.toLowerCase().includes(filters.ticket_number.toLowerCase()) &&
+            seg.segment_reference?.toLowerCase().includes(filters.segment_reference.toLowerCase()) &&
+            (filters.operation_type === "" || seg.operation_type === filters.operation_type)
+        );
+
+    });
 
     const { user } = useAuth();
     const isAllowed = canEditOperation(user?.role);
@@ -46,16 +64,10 @@ export default function SegmentOperations() {
     /* ========================= */
 
     const handleSubmit = async (data: Partial<OperationSegments>) => {
-
-        const payload = {
-            ...data,
-            operation_type: segmentType
-        };
-
         if (editingSegment) {
-            await operationSegmentsService.update(editingSegment.id, payload);
+            await operationSegmentsService.update(editingSegment.id, data);
         } else {
-            await operationSegmentsService.create(payload);
+            await operationSegmentsService.create(data);
         }
 
         setEditingSegment(null);
@@ -78,8 +90,17 @@ export default function SegmentOperations() {
     /* ========================= */
 
     const columns: Column<OperationSegmentWithDetails>[] = [
+        { key: "segment_reference", label: "Référence segment" },
         { key: "operation_client", label: "Client" },
         { key: "passenger_name", label: "Passager" },
+        {
+            key: "departure_date",
+            label: "Date de départ",
+            render: (row) =>
+                row.departure_date
+                    ? row.departure_date.split("T")[0]
+                    : ""
+        },
         { key: "travel_class", label: "Travel classe" },
         { key: "ticket_number", label: "N° Ticket" },
         { key: "airline_name", label: "Airline" },
@@ -142,6 +163,12 @@ export default function SegmentOperations() {
             key: "related_costs",
             label: "Frais connexe",
             render: (row) => row.related_costs?.toFixed(2) ?? "0"
+        },
+
+        {
+            key: "total_amount",
+            label: "TTC",
+            render: (row) => row.total_amount?.toFixed(2) ?? "0"
         },
 
         {
@@ -241,8 +268,7 @@ export default function SegmentOperations() {
                 {/* ===== Bouton ===== */}
                 <div style={{ marginBottom: 15 }}>
                     {isAllowed && (
-                        <div style={{ display: "flex", gap: 10 }}>
-
+                        <div className="actions-buttons">
                             <Button
                                 label="Nouveau billet"
                                 icon={<FaPlus />}
@@ -281,10 +307,63 @@ export default function SegmentOperations() {
                 </div>
             </div>
 
+            <div className="table-filters">
+
+                <input
+                    placeholder="Passager"
+                    value={filters.passenger_name}
+                    onChange={(e) =>
+                        setFilters({ ...filters, passenger_name: e.target.value })
+                    }
+                />
+
+                <input
+                    placeholder="N° Ticket"
+                    value={filters.ticket_number}
+                    onChange={(e) =>
+                        setFilters({ ...filters, ticket_number: e.target.value })
+                    }
+                />
+
+                <input
+                    placeholder="Référence"
+                    value={filters.segment_reference}
+                    onChange={(e) =>
+                        setFilters({ ...filters, segment_reference: e.target.value })
+                    }
+                />
+
+                <select
+                    value={filters.operation_type}
+                    onChange={(e) =>
+                        setFilters({ ...filters, operation_type: e.target.value })
+                    }
+                >
+                    <option value="">Tous</option>
+                    <option value="sale">Sale</option>
+                    <option value="change">Change</option>
+                    <option value="canceled">Canceled</option>
+                </select>
+
+                <Button
+                    label="Reset"
+                    variant="secondary"
+                    onClick={() =>
+                        setFilters({
+                            passenger_name: "",
+                            ticket_number: "",
+                            operation_type: "",
+                            segment_reference: ""
+                        })
+                    }
+                />
+
+            </div>
+
             {/* ===== Table ===== */}
             <Table
                 columns={columns}
-                data={segments}
+                data={filteredSegments}
                 actions={(row: OperationSegmentWithDetails) => (
                     isAllowed ? (
                         <>
@@ -343,8 +422,7 @@ export default function SegmentOperations() {
                     />
                 ) : (
                     <SegmentChangeForm
-                        segmentType={segmentType} // "change" ou "canceled"
-                        initialData={editingSegment ?? undefined}
+                        segmentType={segmentType}
                         onSubmit={handleSubmit}
                         onCancel={() => setIsModalOpen(false)}
                     />

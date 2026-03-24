@@ -1,18 +1,16 @@
 import { useEffect, useState } from "react";
 import { Button } from "../Button";
 import Alert from "../Alert";
+import { round2 } from "../../utils/money";
 
 import type { OperationSegments } from "../../types/operation_segments";
-import type { OperationWithDetails } from "../../types/operations";
 
 import { airlineService } from "../../services/AirlineService";
 import { systemService } from "../../services/SystemService";
-import { itineraireService } from "../../services/ItineraireService";
-import { operationService } from "../../services/OperationService";
+import { operationSegmentsService } from "../../services/OperationSegmentsService";
 
 interface Props {
     segmentType: "change" | "canceled";
-    initialData?: Partial<OperationSegments>;
     onSubmit: (data: Partial<OperationSegments>) => void;
     onCancel: () => void;
 }
@@ -24,35 +22,34 @@ interface Option {
 
 export default function SegmentChangeForm({
     segmentType,
-    initialData,
     onSubmit,
     onCancel
 }: Props) {
 
+    const [segmentReferenceInput, setSegmentReferenceInput] = useState("");
+
     const [formData, setFormData] = useState<Partial<OperationSegments>>({
-        operation_id: initialData?.operation_id ?? "",
-        passenger_name: initialData?.passenger_name ?? "",
-        travel_class: initialData?.travel_class ?? "economy",
-        airline_id: initialData?.airline_id ?? "",
-        system_id: initialData?.system_id ?? "",
-        itineraire_id: initialData?.itineraire_id ?? "",
-        ticket_number: initialData?.ticket_number ?? "",
-        tht: initialData?.tht ?? 0,
-        tax: initialData?.tax ?? 0,
-        service_fee: initialData?.service_fee ?? 0,
-        related_costs: initialData?.related_costs ?? 0,
-        commission: initialData?.commission ?? 0,
-        sold_debit: initialData?.sold_debit ?? 0,
-        update_price: initialData?.update_price ?? 0,
-        cancel_price: initialData?.cancel_price ?? 0,
-        operation_type: initialData?.operation_type ?? segmentType
+        operation_id: "",
+        passenger_name: "",
+        travel_class: "economy",
+        airline_id: "",
+        system_id: "",
+        itineraire: "",
+        ticket_number: "",
+        tht: 0,
+        tax: 0,
+        service_fee: 0,
+        related_costs: 0,
+        commission: 0,
+        sold_debit: 0,
+        total_amount: 0,
+        update_price: 0,
+        cancel_price: 0,
+        operation_type: segmentType
     });
 
     const [airlineOptions, setAirlineOptions] = useState<Option[]>([]);
     const [systemOptions, setSystemOptions] = useState<Option[]>([]);
-    const [itineraireOptions, setItineraireOptions] = useState<Option[]>([]);
-    const [operations, setOperations] = useState<Option[]>([]);
-    const [operationsRaw, setOperationsRaw] = useState<OperationWithDetails[]>([]);
 
     const [alert, setAlert] = useState<{
         type: "success" | "error" | "warning" | "info";
@@ -65,39 +62,13 @@ export default function SegmentChangeForm({
 
             const airlines = await airlineService.getAll();
             const systems = await systemService.getAll();
-            const itineraires = await itineraireService.getAll();
-            const ops = await operationService.getAllWithDetails();
-
-            setOperationsRaw(ops);
 
             setAirlineOptions(
-                airlines.map(a => ({
-                    id: a.id,
-                    label: a.name ?? ""
-                }))
+                airlines.map(a => ({ id: a.id, label: a.name ?? "" }))
             );
 
             setSystemOptions(
-                systems.map(s => ({
-                    id: s.id,
-                    label: s.name ?? ""
-                }))
-            );
-
-            setItineraireOptions(
-                itineraires.map(i => ({
-                    id: i.id,
-                    label: i.code ?? ""
-                }))
-            );
-
-            const filteredOps = ops.filter(o => o.status !== "pending");
-
-            setOperations(
-                filteredOps.map(o => ({
-                    id: o.id,
-                    label: `${o.client_name} (${o.status})`
-                }))
+                systems.map(s => ({ id: s.id, label: s.name ?? "" }))
             );
         };
 
@@ -105,66 +76,127 @@ export default function SegmentChangeForm({
 
     }, []);
 
+    /* ========================= */
+    /* LOAD SEGMENT BY REFERENCE */
+    /* ========================= */
+
+    const handleLoadSegment = async () => {
+
+        setAlert(null);
+
+        if (!segmentReferenceInput) {
+            setAlert({
+                type: "warning",
+                message: "Veuillez saisir une référence segment."
+            });
+            return;
+        }
+
+        const segments = await operationSegmentsService.getAll();
+
+        const segment = segments.find(
+            s => s.segment_reference === segmentReferenceInput
+        );
+
+        if (!segment) {
+            setAlert({
+                type: "error",
+                message: "Aucun segment trouvé avec cette référence."
+            });
+            return;
+        }
+
+        // ✅ remplissage propre (SANS duplication)
+        setFormData({
+            id: crypto.randomUUID(),
+            operation_id: segment.operation_id,
+            passenger_name: segment.passenger_name,
+            travel_class: segment.travel_class,
+            airline_id: segment.airline_id,
+            system_id: segment.system_id,
+            itineraire: segment.itineraire,
+            ticket_number: segment.ticket_number,
+
+            departure_date: segment.departure_date,
+
+            // 🔥 reset financier
+            tht: 0,
+            tax: 0,
+            service_fee: 0,
+            related_costs: 0,
+            commission: 0,
+            sold_debit: 0,
+            total_amount: 0,
+
+            update_price: segmentType === "change" ? 0 : undefined,
+            cancel_price: segmentType === "canceled" ? 0 : undefined,
+
+            operation_type: segmentType
+        });
+    };
+
+    /* ========================= */
+    /* HANDLE CHANGE             */
+    /* ========================= */
+
+    const numericFields = [
+        "tht",
+        "tax",
+        "service_fee",
+        "related_costs",
+        "commission",
+        "sold_debit",
+        "update_price",
+        "cancel_price"
+    ];
+
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     ) => {
 
         const { name, value } = e.target;
 
-        const numericFields = [
-            "tht",
-            "tax",
-            "service_fee",
-            "related_costs",
-            "commission",
-            "sold_debit",
-            "update_price",
-            "cancel_price"
-        ];
-
-        setFormData(prev => ({
-            ...prev,
+        const updated: any = {
+            ...formData,
             [name]: numericFields.includes(name)
-                ? Number(value.replace(",", "."))
+                ? round2(Number(value.replace(",", ".")))
                 : value
-        }));
+        };
 
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-
-        e.preventDefault();
-
-        setAlert(null);
-
-        const selectedOperation = operationsRaw.find(
-            o => o.id === formData.operation_id
+        const ttc = round2(
+            (updated.tht ?? 0) +
+            (updated.tax ?? 0) +
+            (updated.service_fee ?? 0) +
+            (updated.related_costs ?? 0)
         );
 
-        if (!selectedOperation) {
+        updated.total_amount = ttc;
+        updated.sold_debit = round2(ttc - (updated.commission ?? 0));
 
+        setFormData(updated);
+    };
+
+    /* ========================= */
+    /* SUBMIT                    */
+    /* ========================= */
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!formData.operation_id) {
             setAlert({
                 type: "warning",
-                message: "Veuillez sélectionner une opération."
+                message: "Veuillez charger un segment valide."
             });
-
             return;
         }
 
-        // 🔒 Sécurité métier
-        if (segmentType === "change" && selectedOperation.status === "cancelled") {
+        const cleanData = {
+            ...formData,
+            segment_reference: undefined
+        };
 
-            setAlert({
-                type: "error",
-                message:
-                    "Impossible de créer une modification : cette opération est annulée."
-            });
-
-            return;
-        }
-
-        onSubmit(formData);
-
+        onSubmit(cleanData);
     };
 
     return (
@@ -179,26 +211,23 @@ export default function SegmentChangeForm({
                 />
             )}
 
-            <div className="form-grid">
-
-                <div className="form-field">
-                    <label>Opération</label>
-                    <select
-                        name="operation_id"
-                        value={formData.operation_id ?? ""}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="">-- sélectionner --</option>
-
-                        {operations.map(o => (
-                            <option key={o.id} value={o.id}>
-                                {o.label}
-                            </option>
-                        ))}
-
-                    </select>
+            <div className="form-field">
+                <label>Référence segment</label>
+                <div style={{ display: "flex", gap: 8 }}>
+                    <input
+                        value={segmentReferenceInput}
+                        onChange={(e) => setSegmentReferenceInput(e.target.value)}
+                        placeholder="SEG-03-2026-0001"
+                    />
+                    <Button
+                        label="Charger"
+                        variant="secondary"
+                        onClick={handleLoadSegment}
+                    />
                 </div>
+            </div>
+
+            <div className="form-grid">
 
                 <div className="form-field">
                     <label>Passager</label>
@@ -207,6 +236,16 @@ export default function SegmentChangeForm({
                         value={formData.passenger_name ?? ""}
                         onChange={handleChange}
                         required
+                    />
+                </div>
+
+                <div className="form-field">
+                    <label>Date départ</label>
+                    <input
+                        type="date"
+                        name="departure_date"
+                        value={formData.departure_date ?? ""}
+                        onChange={handleChange}
                     />
                 </div>
 
@@ -233,13 +272,11 @@ export default function SegmentChangeForm({
                         required
                     >
                         <option value="">-- sélectionner --</option>
-
                         {airlineOptions.map(o => (
                             <option key={o.id} value={o.id}>
                                 {o.label}
                             </option>
                         ))}
-
                     </select>
                 </div>
 
@@ -252,33 +289,23 @@ export default function SegmentChangeForm({
                         required
                     >
                         <option value="">-- sélectionner --</option>
-
                         {systemOptions.map(o => (
                             <option key={o.id} value={o.id}>
                                 {o.label}
                             </option>
                         ))}
-
                     </select>
                 </div>
 
                 <div className="form-field">
-                    <label>Itinéraire</label>
-                    <select
-                        name="itineraire_id"
-                        value={formData.itineraire_id ?? ""}
+                    <label>Itinéraire / code</label>
+                    <input
+                        name="itineraire"
+                        value={formData.itineraire ?? ""}
                         onChange={handleChange}
+                        placeholder="FIH-DXB"
                         required
-                    >
-                        <option value="">-- sélectionner --</option>
-
-                        {itineraireOptions.map(o => (
-                            <option key={o.id} value={o.id}>
-                                {o.label}
-                            </option>
-                        ))}
-
-                    </select>
+                    />
                 </div>
 
                 <div className="form-field">

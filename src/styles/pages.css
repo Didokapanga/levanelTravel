@@ -311,3 +311,117 @@
     /* rouge */
     font-weight: 600;
 }
+
+.actions-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+    .actions-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .actions-buttons button {
+        width: 100%;
+    }
+}
+
+/* Conteneur des filtres */
+.table-filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+/* Inputs et select */
+.table-filters input,
+.table-filters select {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    transition: border 0.2s, box-shadow 0.2s;
+    min-width: 150px;
+    /* largeur mini pour éviter trop étroit */
+}
+
+/* Focus style */
+.table-filters input:focus,
+.table-filters select:focus {
+    outline: none;
+    border-color: #0f2a44;
+    box-shadow: 0 0 0 2px rgba(15, 42, 68, 0.2);
+}
+
+/* Placeholder couleur grisée */
+.table-filters input::placeholder,
+.table-filters select::placeholder {
+    color: #9ca3af;
+}
+
+/* Responsive pour mobile */
+@media (max-width: 600px) {
+    .table-filters {
+        flex-direction: column;
+    }
+
+    .table-filters input,
+    .table-filters select,
+    .table-filters button {
+        width: 100%;
+    }
+}
+
+/* Conteneur filtre date */
+.filtre-section {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    /* permet de passer à la ligne si ça déborde */
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+/* Inputs date */
+.filtre-section input[type="date"] {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    transition: border 0.2s, box-shadow 0.2s;
+    min-width: 150px;
+}
+
+/* Focus */
+.filtre-section input[type="date"]:focus {
+    outline: none;
+    border-color: #0f2a44;
+    box-shadow: 0 0 0 2px rgba(15, 42, 68, 0.2);
+}
+
+/* Bouton reset */
+.filtre-section button {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    flex-shrink: 0;
+    /* empêche le bouton de rétrécir trop */
+}
+
+/* Responsive mobile */
+@media (max-width: 600px) {
+    .filtre-section {
+        flex-direction: column;
+        align-items: stretch;
+        /* chaque élément prend toute la largeur */
+    }
+
+    .filtre-section input[type="date"],
+    .filtre-section button {
+        width: 100%;
+    }
+}

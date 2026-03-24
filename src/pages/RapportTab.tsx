@@ -175,8 +175,7 @@ export default function ReportTab() {
             key: "update_price",
             label: "Frais de modification",
             render: (row) => {
-                const value = row.update_price ?? 0;
-
+                const value = Number(row.update_price ?? 0);
                 return (
                     <span className={value > 0 ? "amount-change" : ""}>
                         {value.toFixed(2)}
@@ -188,8 +187,7 @@ export default function ReportTab() {
             key: "cancel_price",
             label: "Frais d'annulation",
             render: (row) => {
-                const value = row.cancel_price ?? 0;
-
+                const value = Number(row.cancel_price ?? 0);
                 return (
                     <span className={value > 0 ? "amount-canceled" : ""}>
                         {value.toFixed(2)}
@@ -202,10 +200,9 @@ export default function ReportTab() {
             key: "sold_debit",
             label: "Débit partenaire",
             render: (row) => {
-                const value = row.sold_debit ?? 0;
+                const value = Number(row.sold_debit ?? 0);
 
                 let className = "";
-
                 if (row.operation_type === "sale") className = "amount-sale";
                 if (row.operation_type === "change") className = "amount-change";
                 if (row.operation_type === "canceled") className = "amount-canceled";
@@ -245,7 +242,14 @@ export default function ReportTab() {
         { key: "system_name", label: "System" },
         { key: "itineraire_code", label: "Code itinéraire" },
         { key: "status", label: "Statut" },
-        { key: "date_demande", label: "Date" }
+        {
+            key: "date_demande",
+            label: "Date",
+            render: (row) =>
+                row.date_demande
+                    ? row.date_demande.split("T")[0]
+                    : ""
+        }
     ];
 
     return (

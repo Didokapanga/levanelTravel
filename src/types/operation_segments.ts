@@ -19,14 +19,15 @@ export interface OperationSegments extends BaseEntity {
 
     airline_id?: string;
     system_id?: string;
-    itineraire_id?: string;
+    // itineraire_id?: string;
+    itineraire?: string;
 
     ticket_number?: string;
 
-    date_emission?: string;
     departure_date?: string;
 
     operation_type: OperationType;
+    segment_reference: string;
 
     tht?: number;
     tax?: number;
@@ -46,8 +47,6 @@ export interface OperationSegmentWithDetails extends OperationSegments {
 
     airline_name?: string;
     system_name?: string;
-    itineraire_code?: string;
-    itineraire_country?: string;
 
     operation_client?: string;
     operation_date?: string;

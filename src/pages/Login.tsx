@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import Alert from '../components/Alert'; // Assure-toi que le chemin est correct
+import { supabaseSyncService } from '../services/SupabaseSyncService';
+import Alert from '../components/Alert';
 import '../styles/login.css'
 
 export default function Login() {
@@ -9,15 +10,35 @@ export default function Login() {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
     const { login } = useAuth();
     const navigate = useNavigate();
 
+    // 🔹 Sync initial des users
+    useEffect(() => {
+        const syncUsers = async () => {
+            try {
+                setLoading(true);
+                // Sync seulement la table users pour accélérer
+                await supabaseSyncService.syncTable("users");
+            } catch (err: any) {
+                console.error("Erreur sync initiale:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        syncUsers();
+    }, []);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (loading) return; // bloque login tant que sync pas terminée
 
         try {
-            await login(username, password); // ici tu passes les deux
+            // Login maintenant que Dexie est à jour
+            await login(username, password);
             setError(null);
             navigate('/');
         } catch (err: any) {
@@ -29,17 +50,14 @@ export default function Login() {
         <div className="login-page">
             <div className="login-card">
                 <div className="login-card-header">
-                    {/* Logo */}
                     <div className="login-logo">
                         <img src="/logo.png" alt="Logo ERP" />
                     </div>
-
-                    {/* Header */}
                     <p>Accès sécurisé à l’application</p>
                 </div>
 
                 <form className="login-card-body" onSubmit={handleSubmit}>
-                    {/* ⚡ Affichage des erreurs */}
+                    {loading && <p>Chargement des utilisateurs… ⏳</p>}
                     {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
 
                     <div className="login-field">
@@ -48,6 +66,7 @@ export default function Login() {
                             placeholder="Ex : vannel"
                             value={username}
                             onChange={e => setUsername(e.target.value)}
+                            disabled={loading}
                         />
                     </div>
 
@@ -59,8 +78,8 @@ export default function Login() {
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
+                                disabled={loading}
                             />
-
                             <button
                                 type="button"
                                 className="password-toggle"
@@ -72,7 +91,7 @@ export default function Login() {
                         </div>
                     </div>
 
-                    <button type="submit" className="login-button">
+                    <button type="submit" className="login-button" disabled={loading}>
                         Se connecter
                     </button>
                 </form>

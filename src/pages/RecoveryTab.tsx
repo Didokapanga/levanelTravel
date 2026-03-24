@@ -126,7 +126,7 @@ export default function RecoveryTab() {
                     />
                 )}
 
-                <div style={{ display: "flex", gap: 10 }}>
+                <div className="filtre-section">
 
                     <input
                         type="date"

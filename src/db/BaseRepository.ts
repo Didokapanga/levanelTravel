@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { BaseEntity } from '../types/base';
 import type { Table } from 'dexie';
+import { getCurrentUserId } from '../utils/CurrentUser';
 
 export class BaseRepository<T extends BaseEntity> {
     protected table: Table<T, string>;
@@ -9,9 +10,10 @@ export class BaseRepository<T extends BaseEntity> {
         this.table = table;
     }
 
-    /** Créer un nouvel enregistrement */
     async create(entity: Partial<T>): Promise<T> {
         const now = new Date().toISOString();
+        const userId = getCurrentUserId();
+
         const newEntity: T = {
             id: entity.id ?? uuidv4(),
             created_at: now,
@@ -19,6 +21,8 @@ export class BaseRepository<T extends BaseEntity> {
             version: 1,
             sync_status: 'dirty',
             is_deleted: false,
+            created_by: entity.created_by ?? userId ?? null,
+            updated_by: entity.updated_by ?? userId ?? null,
             ...entity,
         } as T;
 
@@ -26,24 +30,59 @@ export class BaseRepository<T extends BaseEntity> {
         return newEntity;
     }
 
-    /** Mettre à jour un enregistrement existant */
     async update(id: string, updates: Partial<T>): Promise<T | undefined> {
         const existing = await this.table.get(id);
         if (!existing || existing.is_deleted) return undefined;
 
         const now = new Date().toISOString();
+        const userId = getCurrentUserId();
 
         await this.table.update(id, (obj) => {
             if (!obj) return false;
-            Object.assign(obj, updates); // applique tous les champs passés
+            Object.assign(obj, updates);
             obj.updated_at = now;
             obj.version = (obj.version ?? 0) + 1;
             obj.sync_status = 'dirty';
+            obj.updated_by = userId ?? obj.updated_by ?? null;
         });
 
-        const updated = await this.table.get(id);
-        return updated;
+        return this.table.get(id);
     }
+    // /** Créer un nouvel enregistrement */
+    // async create(entity: Partial<T>): Promise<T> {
+    //     const now = new Date().toISOString();
+    //     const newEntity: T = {
+    //         id: entity.id ?? uuidv4(),
+    //         created_at: now,
+    //         updated_at: now,
+    //         version: 1,
+    //         sync_status: 'dirty',
+    //         is_deleted: false,
+    //         ...entity,
+    //     } as T;
+
+    //     await this.table.add(newEntity);
+    //     return newEntity;
+    // }
+
+    // /** Mettre à jour un enregistrement existant */
+    // async update(id: string, updates: Partial<T>): Promise<T | undefined> {
+    //     const existing = await this.table.get(id);
+    //     if (!existing || existing.is_deleted) return undefined;
+
+    //     const now = new Date().toISOString();
+
+    //     await this.table.update(id, (obj) => {
+    //         if (!obj) return false;
+    //         Object.assign(obj, updates); // applique tous les champs passés
+    //         obj.updated_at = now;
+    //         obj.version = (obj.version ?? 0) + 1;
+    //         obj.sync_status = 'dirty';
+    //     });
+
+    //     const updated = await this.table.get(id);
+    //     return updated;
+    // }
 
     /** Supprimer (soft delete) */
     async softDelete(id: string): Promise<boolean> {

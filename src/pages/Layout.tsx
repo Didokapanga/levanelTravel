@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { AiFillDashboard } from 'react-icons/ai';
-import { FaBars, FaBoxes, FaClipboardCheck, FaClipboardList, FaExchangeAlt, FaFileAlt, FaHandshake, FaMapMarkedAlt, FaMoneyBill, FaMoneyCheckAlt, FaPlaneDeparture, FaSyncAlt, FaUsers } from 'react-icons/fa';
+import { FaBars, FaBoxes, FaClipboardCheck, FaClipboardList, FaExchangeAlt, FaFileAlt, FaHandshake, FaMoneyBill, FaMoneyCheckAlt, FaPlaneDeparture, FaSyncAlt, FaUsers } from 'react-icons/fa';
 import { FiLogOut, FiSettings, FiUser } from 'react-icons/fi';
 import '../styles/layout.css';
 import '../styles/sidebar.css';
@@ -66,7 +66,7 @@ export default function Layout() {
             items: [
                 { name: 'Systèmes', path: '/systems', icon: <FiSettings /> },
                 { name: 'Airlines', path: '/airlines', icon: <FaPlaneDeparture /> },
-                { name: 'Itinéraires', path: '/destinations', icon: <FaMapMarkedAlt /> },
+                // { name: 'Itinéraires', path: '/destinations', icon: <FaMapMarkedAlt /> },
             ],
         },
         {

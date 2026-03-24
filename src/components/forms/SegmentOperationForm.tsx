@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Button } from "../Button";
+import { round2 } from "../../utils/money";
 
 import type { OperationSegments } from "../../types/operation_segments";
 import { airlineService } from "../../services/AirlineService";
 import { systemService } from "../../services/SystemService";
-import { itineraireService } from "../../services/ItineraireService";
 import { operationService } from "../../services/OperationService";
 
 interface Props {
@@ -26,14 +26,17 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
         travel_class: initialData?.travel_class ?? "economy",
         airline_id: initialData?.airline_id ?? "",
         system_id: initialData?.system_id ?? "",
-        itineraire_id: initialData?.itineraire_id ?? "",
+        itineraire: initialData?.itineraire ?? "",
         ticket_number: initialData?.ticket_number ?? "",
+        departure_date: initialData?.departure_date ?? "",
         tht: initialData?.tht ?? 0,
         tax: initialData?.tax ?? 0,
+        segment_reference: initialData?.segment_reference ?? "",
         service_fee: initialData?.service_fee ?? 0,
         related_costs: initialData?.related_costs ?? 0,
         commission: initialData?.commission ?? 0,
         sold_debit: initialData?.sold_debit ?? 0,
+        total_amount: initialData?.total_amount ?? 0,
         update_price: initialData?.update_price ?? 0,
         cancel_price: initialData?.cancel_price ?? 0,
         operation_type: initialData?.operation_type ?? "sale",
@@ -42,8 +45,6 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
     const [operations, setOperations] = useState<Option[]>([]);
     const [airlineOptions, setAirlineOptions] = useState<Option[]>([]);
     const [systemOptions, setSystemOptions] = useState<Option[]>([]);
-    const [itineraireOptions, setItineraireOptions] = useState<Option[]>([]);
-    const [commissionPercent, setCommissionPercent] = useState<number>(0);
 
     const isSale = formData.operation_type === "sale";
     const isChange = formData.operation_type === "change";
@@ -55,7 +56,6 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
 
             const airlines = await airlineService.getAll();
             const systems = await systemService.getAll();
-            const itineraires = await itineraireService.getAll();
             const ops = await operationService.getAllWithDetails();
 
             let filteredOps;
@@ -63,11 +63,20 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
             const isEditing = !!initialData?.id;
 
             if (isEditing) {
-                // modification : seulement l'opération du segment
                 filteredOps = ops.filter(o => o.id === initialData?.operation_id);
             } else {
-                // création : seulement les opérations pending
                 filteredOps = ops.filter(o => o.status === "pending");
+            }
+
+            if (!initialData?.id && !formData.segment_reference) {
+                const now = new Date();
+                const month = String(now.getMonth() + 1).padStart(2, "0");
+                const year = now.getFullYear();
+
+                setFormData(prev => ({
+                    ...prev,
+                    segment_reference: `SEG-${month}-${year}`
+                }));
             }
 
             setOperations(
@@ -78,24 +87,11 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
             );
 
             setAirlineOptions(
-                airlines.map(a => ({
-                    id: a.id,
-                    label: a.name ?? ""
-                }))
+                airlines.map(a => ({ id: a.id, label: a.name ?? "" }))
             );
 
             setSystemOptions(
-                systems.map(s => ({
-                    id: s.id,
-                    label: s.name ?? ""
-                }))
-            );
-
-            setItineraireOptions(
-                itineraires.map(i => ({
-                    id: i.id,
-                    label: i.code ?? ""
-                }))
+                systems.map(s => ({ id: s.id, label: s.name ?? "" }))
             );
         };
 
@@ -104,76 +100,40 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
     }, [initialData]);
 
     const numericFields = [
-        "tht",
-        "tax",
-        "service_fee",
-        "related_costs",
-        "commission",
-        "sold_debit",
-        "update_price",
-        "cancel_price"
+        "tht", "tax", "service_fee", "related_costs",
+        "commission", "sold_debit", "update_price", "cancel_price"
     ];
 
-    const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-    ) => {
-
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
 
-        const updated: any = {
+        let updated: any = {
             ...formData,
-            [name]: numericFields.includes(name)
-                ? Number(value.replace(",", "."))
-                : value
+            [name]: numericFields.includes(name) ? round2(Number(value || 0)) : value
         };
 
-        if (!isSale) {
-
+        // Recalcul TTC / SoldDebit seulement pour sale
+        if (updated.operation_type === "sale") {
+            const ttc = round2(
+                (updated.tht ?? 0) +
+                (updated.tax ?? 0) +
+                (updated.service_fee ?? 0) +
+                (updated.related_costs ?? 0)
+            );
+            updated.total_amount = ttc;
+            updated.sold_debit = round2(ttc - (updated.commission ?? 0));
+        } else {
+            // Reset montants pour change / canceled
             updated.tht = 0;
             updated.tax = 0;
             updated.service_fee = 0;
             updated.related_costs = 0;
             updated.commission = 0;
             updated.sold_debit = 0;
-
-        } else {
-
-            const ttc =
-                (updated.tht ?? 0) +
-                (updated.tax ?? 0) +
-                (updated.service_fee ?? 0) +
-                (updated.related_costs ?? 0);
-
-            updated.sold_debit = ttc - (updated.commission ?? 0);
+            updated.total_amount = 0;
         }
 
         setFormData(updated);
-    };
-
-    const handleCommissionPercent = (
-        e: React.ChangeEvent<HTMLInputElement>
-    ) => {
-
-        const percent = Number(e.target.value);
-
-        setCommissionPercent(percent);
-
-        setFormData(prev => {
-
-            const commission = ((prev.tht ?? 0) * percent) / 100;
-
-            const ttc =
-                (prev.tht ?? 0) +
-                (prev.tax ?? 0) +
-                (prev.service_fee ?? 0) +
-                (prev.related_costs ?? 0);
-
-            return {
-                ...prev,
-                commission,
-                sold_debit: ttc - commission
-            };
-        });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -181,11 +141,12 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
         onSubmit(formData);
     };
 
-    const ttcValue =
+    const ttcValue = round2(
         (formData.tht ?? 0) +
         (formData.tax ?? 0) +
         (formData.service_fee ?? 0) +
-        (formData.related_costs ?? 0);
+        (formData.related_costs ?? 0)
+    );
 
     return (
         <form onSubmit={handleSubmit} className="app-form">
@@ -198,14 +159,11 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
                         name="operation_id"
                         value={formData.operation_id ?? ""}
                         onChange={handleChange}
-                        disabled={!!initialData?.id}
                         required
                     >
                         <option value="">-- sélectionner --</option>
                         {operations.map(o => (
-                            <option key={o.id} value={o.id}>
-                                {o.label}
-                            </option>
+                            <option key={o.id} value={o.id}>{o.label}</option>
                         ))}
                     </select>
                 </div>
@@ -257,11 +215,7 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
                         required
                     >
                         <option value="">-- sélectionner --</option>
-                        {airlineOptions.map(o => (
-                            <option key={o.id} value={o.id}>
-                                {o.label}
-                            </option>
-                        ))}
+                        {airlineOptions.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
                     </select>
                 </div>
 
@@ -274,29 +228,19 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
                         required
                     >
                         <option value="">-- sélectionner --</option>
-                        {systemOptions.map(o => (
-                            <option key={o.id} value={o.id}>
-                                {o.label}
-                            </option>
-                        ))}
+                        {systemOptions.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
                     </select>
                 </div>
 
                 <div className="form-field">
-                    <label>Itinéraire</label>
-                    <select
-                        name="itineraire_id"
-                        value={formData.itineraire_id ?? ""}
+                    <label>Itinéraire / code</label>
+                    <input
+                        name="itineraire"
+                        value={formData.itineraire ?? ""}
                         onChange={handleChange}
+                        placeholder="FIH-DXB"
                         required
-                    >
-                        <option value="">-- sélectionner --</option>
-                        {itineraireOptions.map(o => (
-                            <option key={o.id} value={o.id}>
-                                {o.label}
-                            </option>
-                        ))}
-                    </select>
+                    />
                 </div>
 
                 <div className="form-field">
@@ -309,125 +253,73 @@ export default function OperationSegmentForm({ initialData, onSubmit, onCancel }
                     />
                 </div>
 
-                {isSale && (
-                    <>
-                        <div className="form-field">
-                            <label>THT</label>
-                            <input
-                                type="number"
-                                name="tht"
-                                value={formData.tht}
-                                onChange={handleChange}
-                            />
-                        </div>
+                <div className="form-field">
+                    <label>Date départ</label>
+                    <input
+                        type="date"
+                        name="departure_date"
+                        value={formData.departure_date ?? ""}
+                        onChange={handleChange}
+                    />
+                </div>
 
-                        <div className="form-field">
-                            <label>Tax</label>
-                            <input
-                                type="number"
-                                name="tax"
-                                value={formData.tax}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div className="form-field">
-                            <label>Frais services</label>
-                            <input
-                                type="number"
-                                name="service_fee"
-                                value={formData.service_fee}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div className="form-field">
-                            <label>Frais connexe</label>
-                            <input
-                                type="number"
-                                name="related_costs"
-                                value={formData.related_costs}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div className="form-field">
-                            <label>% Commission</label>
-                            <input
-                                type="number"
-                                value={commissionPercent}
-                                onChange={handleCommissionPercent}
-                            />
-                        </div>
-
-                        <div className="form-field">
-                            <label>Commission</label>
-                            <input
-                                type="number"
-                                value={formData.commission}
-                                readOnly
-                            />
-                        </div>
-
-                        <div className="form-field">
-                            <label>TTC</label>
-                            <input
-                                type="number"
-                                value={ttcValue}
-                                readOnly
-                            />
-                        </div>
-
-                        <div className="form-field">
-                            <label>Sold Debit</label>
-                            <input
-                                type="number"
-                                value={formData.sold_debit}
-                                readOnly
-                            />
-                        </div>
-                    </>
-                )}
-
-                {isChange && (
+                {isSale && <>
                     <div className="form-field">
-                        <label>Frais modification</label>
-                        <input
-                            type="number"
-                            name="update_price"
-                            value={formData.update_price}
-                            onChange={handleChange}
-                        />
+                        <label>THT</label>
+                        <input type="number" name="tht" value={formData.tht} onChange={handleChange} />
                     </div>
-                )}
 
-                {isCancel && (
                     <div className="form-field">
-                        <label>Frais annulation</label>
-                        <input
-                            type="number"
-                            name="cancel_price"
-                            value={formData.cancel_price}
-                            onChange={handleChange}
-                        />
+                        <label>Taxe</label>
+                        <input type="number" name="tax" value={formData.tax} onChange={handleChange} />
                     </div>
-                )}
+
+                    <div className="form-field">
+                        <label>Frais services</label>
+                        <input type="number" name="service_fee" value={formData.service_fee} onChange={handleChange} />
+                    </div>
+
+                    <div className="form-field">
+                        <label>Frais connexe</label>
+                        <input type="number" name="related_costs" value={formData.related_costs} onChange={handleChange} />
+                    </div>
+
+                    <div className="form-field">
+                        <label>Commission (ex : 12,15)</label>
+                        <input type="number" name="commission" value={formData.commission} onChange={handleChange} />
+                    </div>
+
+                    <div className="form-field">
+                        <label>TTC</label>
+                        <input type="number" value={ttcValue} readOnly />
+                    </div>
+
+                    <div className="form-field">
+                        <label>Sold Debit</label>
+                        <input type="number" value={formData.sold_debit} readOnly />
+                    </div>
+
+                    <div className="form-field">
+                        <label>Référence segment</label>
+                        <input type="text" value={formData.segment_reference ?? ""} readOnly />
+                    </div>
+                </>}
+
+                {isChange && <div className="form-field">
+                    <label>Frais modification</label>
+                    <input type="number" name="update_price" value={formData.update_price} onChange={handleChange} />
+                </div>}
+
+                {isCancel && <div className="form-field">
+                    <label>Frais annulation</label>
+                    <input type="number" name="cancel_price" value={formData.cancel_price} onChange={handleChange} />
+                </div>}
 
             </div>
 
             <div className="form-actions">
-
-                <Button
-                    label="Annuler"
-                    variant="secondary"
-                    onClick={onCancel}
-                />
-
-                <Button
-                    label="Enregistrer"
-                    variant="primary"
-                />
-
+                <Button label="Annuler" variant="secondary" onClick={onCancel} />
+                <Button label="Enregistrer" variant="primary" />
             </div>
 
         </form>

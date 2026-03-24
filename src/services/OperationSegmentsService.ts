@@ -11,6 +11,32 @@ import { clientRepo } from "../db/repositories/ClientRepository";
 class OperationSegmentsService {
 
     /* ============================ */
+    /* UTILS                        */
+    /* ============================ */
+
+    private generateSegmentReference(count: number): string {
+        const now = new Date();
+
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const year = now.getFullYear();
+        const increment = String(count + 1).padStart(4, "0");
+
+        return `SEG-${month}-${year}-${increment}`;
+    }
+
+    async getCountByMonth(month: number, year: number): Promise<number> {
+        const segments = await operationSegmentsRepo.getAll();
+
+        return segments.filter(s => {
+            const date = new Date(s.created_at);
+            return (
+                date.getMonth() === month &&
+                date.getFullYear() === year
+            );
+        }).length;
+    }
+
+    /* ============================ */
     /* BASIC CRUD (ENTITY)          */
     /* ============================ */
 
@@ -18,8 +44,20 @@ class OperationSegmentsService {
         return operationSegmentsRepo.getAll();
     }
 
-    create(data: Partial<OperationSegments>) {
-        return operationSegmentsRepo.create(data as OperationSegments);
+    async create(data: Partial<OperationSegments>) {
+
+        const now = new Date();
+        const count = await this.getCountByMonth(
+            now.getMonth(),
+            now.getFullYear()
+        );
+
+        const segment_reference = this.generateSegmentReference(count);
+
+        return operationSegmentsRepo.create({
+            ...data,
+            segment_reference
+        } as OperationSegments);
     }
 
     async findByOperation(operation_id: string): Promise<OperationSegmentWithDetails[]> {
@@ -27,10 +65,7 @@ class OperationSegmentsService {
     }
 
     async getEnrichedByOperation(operation_id: string): Promise<OperationSegmentWithDetails[]> {
-        // Récupère tous les segments enrichis
         const allSegments = await this.getAllWithDetails();
-
-        // Filtre uniquement ceux de l'opération demandée
         return allSegments.filter(s => s.operation_id === operation_id);
     }
 
@@ -73,13 +108,11 @@ class OperationSegmentsService {
 
         const airlines = await db.airlines.toArray();
         const systems = await db.systems.toArray();
-        const itineraires = await db.itineraires.toArray();
         const operations = await db.operations.toArray();
         const clients = await clientRepo.getAll();
 
         const airlineMap = new Map(airlines.map(a => [a.id, a]));
         const systemMap = new Map(systems.map(s => [s.id, s]));
-        const itineraireMap = new Map(itineraires.map(i => [i.id, i]));
         const operationMap = new Map(operations.map(o => [o.id, o]));
         const clientMap = new Map(clients.map(c => [c.id, c]));
 
@@ -93,37 +126,26 @@ class OperationSegmentsService {
                 ? systemMap.get(s.system_id)
                 : undefined;
 
-            const itineraire = s.itineraire_id
-                ? itineraireMap.get(s.itineraire_id)
-                : undefined;
-
             const operation = operationMap.get(s.operation_id);
 
             const client = operation?.client_id
                 ? clientMap.get(operation.client_id)
                 : undefined;
 
-            const dto: OperationSegmentWithDetails = {
+            return {
                 ...s,
-
                 receipt_reference: operation?.receipt_reference,
-
                 airline_name: airline?.name,
                 system_name: system?.name,
-                itineraire_code: itineraire?.code,
-
-                operation_client: client?.name,   // ✅ NOM DU CLIENT
+                operation_client: client?.name,
                 operation_date: operation?.date_demande
             };
-
-            return dto;
         });
     }
 
     async getUpdatesOrCancellations(): Promise<OperationSegmentWithDetails[]> {
         const segments = await this.getAllWithDetails();
 
-        // Filtre uniquement les segments avec update_price ou cancel_price > 0
         return segments.filter(s =>
             (s.update_price && s.update_price > 0) ||
             (s.cancel_price && s.cancel_price > 0)
