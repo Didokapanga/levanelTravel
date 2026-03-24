@@ -18,12 +18,10 @@ export class InvoiceService {
         const enriched: OperationSegmentWithDetails[] = await Promise.all(
             segments.map(async s => {
                 const airline = s.airline_id ? await db.airlines.get(s.airline_id) : undefined;
-                const itineraire = s.itineraire_id ? await db.itineraires.get(s.itineraire_id) : undefined;
 
                 return {
                     ...s,
                     airline_name: airline?.name,
-                    itineraire_code: itineraire?.code
                 };
             })
         );
@@ -38,7 +36,6 @@ export class InvoiceService {
         const segments = await this.fetchSegments(operation.id);
 
         const airlineName = segments.map(s => s.airline_name).filter(Boolean).join(", ");
-        const itineraireCode = segments.map(s => s.itineraire_code).filter(Boolean).join(", ");
 
         const res = await fetch("/templates/proforma.xlsx");
         const buffer = await res.arrayBuffer();
@@ -49,7 +46,6 @@ export class InvoiceService {
         ws["B3"] = { v: operation.client_name, t: "s" };
         ws["B4"] = { v: operation.date_demande, t: "s" };
         ws["B5"] = { v: airlineName || "", t: "s" };
-        ws["B6"] = { v: itineraireCode || "", t: "s" };
 
         const file = XLSX.write(wb, { type: "array", bookType: "xlsx" });
         saveAs(new Blob([file]), `Proforma_${operation.receipt_reference}.xlsx`);
@@ -62,7 +58,6 @@ export class InvoiceService {
         const segments = await this.fetchSegments(operation.id);
 
         const airlineName = segments.map(s => s.airline_name).filter(Boolean).join(", ");
-        const itineraireCode = segments.map(s => s.itineraire_code).filter(Boolean).join(", ");
         // const itineraireCode = segments.map(s => s.itineraire_country).filter(Boolean).join(", ");
 
         const tht = segments.reduce((sum, s) => sum + (s.tht ?? 0), 0);
@@ -79,7 +74,6 @@ export class InvoiceService {
         ws["B3"] = { v: operation.client_name, t: "s" };
         ws["B4"] = { v: operation.date_demande, t: "s" };
         ws["B5"] = { v: airlineName || "", t: "s" };
-        ws["B6"] = { v: itineraireCode || "", t: "s" };
 
         ws["B10"] = { v: tht, t: "n" };
         ws["B11"] = { v: tax, t: "n" };

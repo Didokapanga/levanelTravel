@@ -73,7 +73,7 @@ export default function ReportTab() {
                     cancel_price: s.cancel_price || 0,
 
                     operation_type: s.operation_type,
-                    itineraire_id: s.itineraire_id || "",
+                    itineraire: s.itineraire || "",
 
                     status: operation?.status || "",
 
@@ -81,7 +81,6 @@ export default function ReportTab() {
 
                     airline_name: s.airline_name,
                     system_name: s.system_name,
-                    itineraire_code: s.itineraire_code
                 };
             });
 
@@ -116,7 +115,7 @@ export default function ReportTab() {
                     sold_debit: "",
 
                     operation_type: "",
-                    itineraire_id: "",
+                    itineraire: "",
 
                     airline_name: "",
                     system_name: "",
@@ -240,7 +239,7 @@ export default function ReportTab() {
         },
         { key: "airline_name", label: "Compagnie" },
         { key: "system_name", label: "System" },
-        { key: "itineraire_code", label: "Code itinéraire" },
+        { key: "itineraire", label: "Code itinéraire" },
         { key: "status", label: "Statut" },
         {
             key: "date_demande",
